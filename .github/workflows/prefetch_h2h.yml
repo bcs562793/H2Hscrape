@@ -1,0 +1,41 @@
+name: Daily H2H Prefetch
+
+on:
+  schedule:
+    # Her gün 02:00 UTC = 05:00 TR
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (Supabase''e yazma)'
+        type: boolean
+        default: false
+
+jobs:
+  prefetch-h2h:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run H2H Prefetch
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          node prefetch_h2h.js ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prefetch-h2h-log-${{ github.run_id }}
+          path: prefetch_h2h.log
+          retention-days: 7
