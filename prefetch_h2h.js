@@ -428,8 +428,33 @@ function parseH2H(html) {
     return rows;
   };
 
-  const formTables = [...html.matchAll(/Form Durumu\s*<\/div>\s*<table[^>]*>([\s\S]*?)<\/table>/g)]
-    .map(m => m[1]);
+  // Nested <table> olabileceği için basit regex yetmez — derinlik sayacıyla doğru </table>'ı buluyoruz
+  const extractTableContent = (startIdx) => {
+    const openTag  = html.indexOf('<table', startIdx);
+    if (openTag < 0) return null;
+    let depth = 0, i = openTag;
+    while (i < html.length) {
+      if (html[i] === '<') {
+        if (html.slice(i, i + 6).toLowerCase() === '<table')  { depth++; i += 6; continue; }
+        if (html.slice(i, i + 8).toLowerCase() === '</table>') {
+          depth--;
+          if (depth === 0) return { content: html.slice(openTag + html.indexOf('>', openTag) + 1, i), end: i + 8 };
+          i += 8; continue;
+        }
+      }
+      i++;
+    }
+    return null;
+  };
+
+  const formTables = [];
+  const formSectionRe = /Form Durumu\s*<\/div>/g;
+  let fMatch;
+  while ((fMatch = formSectionRe.exec(html)) !== null) {
+    const extracted = extractTableContent(fMatch.index);
+    if (extracted) formTables.push(extracted.content);
+  }
+
   if (formTables[0]) result.homeForm = parseForm(formTables[0]);
   if (formTables[1]) result.awayForm = parseForm(formTables[1]);
 
@@ -447,8 +472,13 @@ function parseH2H(html) {
     return scorers;
   };
 
-  const scorerTables = [...html.matchAll(/En Golc[üu]ler\s*<\/div>\s*<table[^>]*>([\s\S]*?)<\/table>/g)]
-    .map(m => m[1]);
+  const scorerTables = [];
+  const scorerSectionRe = /En Golc[üu]ler\s*<\/div>/g;
+  let sMatch;
+  while ((sMatch = scorerSectionRe.exec(html)) !== null) {
+    const extracted = extractTableContent(sMatch.index);
+    if (extracted) scorerTables.push(extracted.content);
+  }
   if (scorerTables[0]) result.homeScorers = parseScorers(scorerTables[0]);
   if (scorerTables[1]) result.awayScorers = parseScorers(scorerTables[1]);
 
