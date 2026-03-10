@@ -392,26 +392,26 @@ function parseH2H(html) {
   }
 
   // ── FORM TABLOLARI ──
-  // tds yapısı: [0]=lig [1]=tarih+evSahibi [2]=skor [3]=deplasman [4]=sonuç resmi
+  // Kolon yapısı: [0]=lig [1]=tarih [2]=ev sahibi [3]=skor [4]=deplasman [5]=sonuç
   const parseForm = tableHtml => {
     const rows = [];
     const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
     let m;
     while ((m = rowRe.exec(tableHtml)) !== null) {
       const tds = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(t => t[1]);
-      if (tds.length < 5) continue; // başlık / boş satırlar
+      if (tds.length < 6) continue; // başlık / boş satırlar
 
-      const league           = tds[0].replace(/<[^>]+>/g, '').trim();
-      const rawDateAndHome   = tds[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
-      const dateM            = rawDateAndHome.match(/(\d{2}\.\d{2})/);
-      const dateStr          = dateM ? dateM[1] : '';
-      const homeTeam         = rawDateAndHome.replace(dateStr, '').replace(/\s+/g, ' ').trim();
+      const league   = tds[0].replace(/<[^>]+>/g, '').trim();
+      const rawDate  = tds[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
+      const dateM    = rawDate.match(/(\d{2}\.\d{2})/);
+      const dateStr  = dateM ? dateM[1] : '';
+      const homeTeam = tds[2].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 
-      const scoreM = tds[2].match(/<b>\s*(\d+)\s*-\s*(\d+)/i);
+      const scoreM = tds[3].match(/<b>\s*(\d+)\s*-\s*(\d+)/i);
       if (!scoreM) continue; // oynanmamış (v) satırlar
 
-      const awayTeam = tds[3].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
-      const imgM     = tds[4].match(/img5\/(G|B|M)\.png/i);
+      const awayTeam = tds[4].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+      const imgM     = tds[5].match(/img5\/(G|B|M)\.png/i);
       const resultV  = imgM ? (imgM[1].toUpperCase() === 'G' ? 'W' : imgM[1].toUpperCase() === 'B' ? 'D' : 'L') : '';
 
       rows.push({
