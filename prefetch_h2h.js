@@ -16,7 +16,7 @@
  *   SUPABASE_KEY
  *
  * Cron örneği (her gün 05:00 TR = 02:00 UTC):
- *   0 2 * * * node /app/prefetch_h2h.js >> /var/log/prefetch_h2h.log 2>&1
+ *   1 0 * * * node /app/prefetch_h2h.js >> /var/log/prefetch_h2h.log 2>&1
  */
 
 'use strict';
