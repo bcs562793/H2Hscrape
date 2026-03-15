@@ -3,7 +3,7 @@ name: Daily H2H Prefetch
 on:
   schedule:
     # Her gün 02:00 UTC = 05:00 TR
-    - cron: '1 21 * * *'
+    - cron: '30 21 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
