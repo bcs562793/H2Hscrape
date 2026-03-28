@@ -222,13 +222,41 @@ async function sbFetch(method, path_, body = null) {
 /** Bugün başlamamış (NS) maçları Supabase'den çek */
 async function fetchTodayMatches() {
   const today = getTRToday();
-  log(`📅 Bugün: ${today} | NS maçlar çekiliyor...`);
+  log(`📅 Bugün: ${today} | Maçlar çekiliyor...`);
 
-  // updated_at bugün olan NS maçlar
-  const q = `/rest/v1/live_matches?status_short=eq.NS&updated_at=gte.${today}T00:00:00&select=fixture_id,home_team,home_team_id,away_team,away_team_id`;
-  const rows = await sbFetch('GET', q);
-  log(`   ✅ ${rows.length} NS maç bulundu`);
-  return rows || [];
+  // live_matches'taki NS maçlar
+  const q1 = `/rest/v1/live_matches?status_short=eq.NS&select=fixture_id,home_team,home_team_id,away_team,away_team_id`;
+  const liveRows = await sbFetch('GET', q1);
+  log(`   live_matches NS: ${liveRows.length} maç`);
+
+  // future_matches'taki bugünün maçları
+  const q2 = `/rest/v1/future_matches?date=eq.${today}&select=fixture_id,date`;
+  const futureRows = await sbFetch('GET', q2);
+  log(`   future_matches bugün: ${futureRows.length} maç`);
+
+  // future_matches'tan detay için live_matches'a bak, yoksa raw data'dan çıkar
+  const allRows = [...liveRows];
+  
+  for (const fr of futureRows) {
+    if (!allRows.find(r => r.fixture_id === fr.fixture_id)) {
+      // future_matches'tan detaylı veriyi çek
+      const q3 = `/rest/v1/future_matches?fixture_id=eq.${fr.fixture_id}&select=fixture_id,data`;
+      const detail = await sbFetch('GET', q3);
+      if (detail?.[0]?.data) {
+        const d = detail[0].data;
+        allRows.push({
+          fixture_id:   fr.fixture_id,
+          home_team:    d.teams?.home?.name || '',
+          home_team_id: d.teams?.home?.id   || null,
+          away_team:    d.teams?.away?.name || '',
+          away_team_id: d.teams?.away?.id   || null,
+        });
+      }
+    }
+  }
+
+  log(`   ✅ Toplam: ${allRows.length} maç`);
+  return allRows.filter(r => r.home_team_id && r.away_team_id);
 }
 
 /** H2H verisi zaten var mı? */
