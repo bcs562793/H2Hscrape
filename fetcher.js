@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process'); // EKLENDİ: Terminal komutlarını çalıştırmak için
 
 const API_KEY = process.env.API_KEY;
 const SEASON = '2023'; // Güncel sezon
@@ -9,7 +10,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function start() {
     const headers = { 'x-apisports-key': API_KEY };
 
-    // 1. DÜNYADAKİ TÜM LİGLERİ OTOMATİK BUL (1 İstek harcar)
+    // 1. DÜNYADAKİ TÜM LİGLERİ OTOMATİK BUL
     console.log("Dünyadaki tüm ligler taranıyor...");
     const leaguesRes = await fetch('https://v3.football.api-sports.io/leagues', { headers });
     const leaguesData = await leaguesRes.json();
@@ -42,7 +43,6 @@ async function start() {
     const remainingLeagues = allLeagueIds.filter(id => !processedLeagues.includes(id));
     console.log(`Geriye çekilecek ${remainingLeagues.length} lig kaldı.`);
 
-    // Günde 100 istek limitimiz var. Her çalışmada 80 lig çekiyoruz (Güvenlik payı)
     const targetLeagues = remainingLeagues.slice(0, 665);
 
     if (targetLeagues.length === 0) {
@@ -59,7 +59,6 @@ async function start() {
             const res = await fetch(`https://v3.football.api-sports.io/teams?league=${leagueId}&season=${SEASON}`, { headers });
             const data = await res.json();
             
-            // Eğer limite çarptıysak döngüyü güvenli şekilde kır
             if (!data.response || (data.errors && data.errors.requests)) {
                 console.log("API limitine ulaşıldı, işlem durduruluyor...");
                 break;
@@ -68,7 +67,6 @@ async function start() {
             for (const item of data.response) {
                 const team = item.team;
                 
-                // Takım havuzumuzda yoksa ekle
                 if (!allTeams.find(t => t.id === team.id)) {
                     allTeams.push({ 
                         id: team.id, 
@@ -78,12 +76,10 @@ async function start() {
                     });
                 }
 
-                // Logoyu klasöre kaydet
                 const dir = path.join(__dirname, 'logos', 'teams');
                 if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
                 const filePath = path.join(dir, `${team.id}.png`);
 
-                // Sadece daha önce inmediyse indir (hız kazandırır)
                 if (!fs.existsSync(filePath) && team.logo) {
                     const imgRes = await fetch(team.logo);
                     const buffer = await imgRes.arrayBuffer();
@@ -92,14 +88,12 @@ async function start() {
                 }
             }
             
-            // Başarılı olan ligi hafızaya yaz
             processedLeagues.push(leagueId);
 
         } catch (err) {
             console.error(`Lig ${leagueId} çekilirken hata:`, err);
         }
         
-        // Dakikada 10 istek sınırını aşmamak için her lig arası 7 saniye uyu
         await sleep(7000); 
     }
 
@@ -107,7 +101,32 @@ async function start() {
     fs.writeFileSync(teamsFile, JSON.stringify(allTeams, null, 2));
     fs.writeFileSync(progressFile, JSON.stringify(processedLeagues, null, 2));
     
-    console.log("Oturum bitti! Veriler ve yeni logolar GitHub'a kaydedilmeye hazır.");
+    console.log("Oturum bitti! Veriler ve yeni logolar GitHub'a yükleniyor...");
+
+    // 6. GİT HATASINI ÇÖZEN OTOMATİK PUSH İŞLEMİ (YENİ EKLENEN KISIM)
+    try {
+        // Değişiklikleri Git'e ekle
+        execSync('git add .');
+
+        // Commit at (Eğer değişen bir şey yoksa scriptin çökmemesi için try-catch içinde)
+        try {
+            execSync('git commit -m "Otomatik Bot: Yeni takım logoları ve veriler eklendi"');
+        } catch (e) {
+            console.log("Gönderilecek yeni bir değişiklik bulunamadı.");
+        }
+
+        // EN ÖNEMLİ ADIM: GitHub'daki çakışmaları (senin yaşadığın hatayı) çözmek için önce verileri çek
+        console.log("GitHub'dan güncel veriler çekiliyor (Pull)...");
+        execSync('git pull --rebase origin main');
+
+        // Şimdi güvenle Push yap
+        console.log("Değişiklikler GitHub'a gönderiliyor (Push)...");
+        execSync('git push origin main');
+
+        console.log("✅ İşlem başarıyla tamamlandı ve GitHub'a sorunsuz yüklendi!");
+    } catch (error) {
+        console.error("❌ Git işlemi sırasında bir hata oluştu:", error.message);
+    }
 }
 
 start();
