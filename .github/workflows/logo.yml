@@ -1,0 +1,29 @@
+name: Logolari Cek
+
+on:
+  workflow_dispatch: # Botu manuel çalıştırmamızı sağlar
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dosyaları Al
+        uses: actions/checkout@v3
+
+      - name: Node.js Kur
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Logoları Çek ve İndir
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: node fetcher.js
+
+      - name: Dosyaları GitHub'a Kaydet
+        run: |
+          git config --global user.name 'GitHub Action Bot'
+          git config --global user.email 'action@github.com'
+          git add .
+          git commit -m "Logolar güncellendi" || echo "Değişiklik yok"
+          git push
