@@ -43,7 +43,7 @@ async function start() {
     console.log(`Geriye çekilecek ${remainingLeagues.length} lig kaldı.`);
 
     // Günde 100 istek limitimiz var. Her çalışmada 80 lig çekiyoruz (Güvenlik payı)
-    const targetLeagues = remainingLeagues.slice(0, 80);
+    const targetLeagues = remainingLeagues.slice(0, 665);
 
     if (targetLeagues.length === 0) {
         console.log("Tebrikler! Dünyadaki tüm ligler ve takımlar zaten deponuza çekilmiş.");
