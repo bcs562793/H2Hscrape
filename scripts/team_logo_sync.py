@@ -2,10 +2,11 @@
 scripts/team_logo_sync.py
 ─────────────────────────
 GitHub Actions üzerinden her gün TR 06:00'da çalışır.
-Akıllı çok katmanlı fuzzy eşleştirme kullanır.
+Supabase REST API kullanır (psycopg2 gerekmez).
 
-Gerekli repo secret:
-    DATABASE_URL  →  postgresql://user:pass@host:5432/dbname
+Gerekli Actions secrets:
+    SUPABASE_URL  →  https://xxxxxxxxxxxx.supabase.co
+    SUPABASE_KEY  →  service_role key (Settings > API)
 """
 
 import logging
@@ -15,10 +16,9 @@ import sys
 import unicodedata
 from datetime import datetime, timezone
 
-import psycopg2
-import psycopg2.extras
 import requests
 from rapidfuzz import fuzz
+from supabase import Client, create_client
 
 # ── Ayarlar ───────────────────────────────────────────────────────────────────
 
@@ -26,7 +26,8 @@ GITHUB_URL = (
     "https://raw.githubusercontent.com/bcs562793/H2Hscrape/main/data/teams.json"
 )
 
-DB_DSN = os.environ["DATABASE_URL"]
+SUPABASE_URL = os.environ["SUPABASE_URL"]
+SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 
 MIN_SCORE = 72   # Bu skorun altı low_confidence = TRUE
 
@@ -43,7 +44,6 @@ log = logging.getLogger(__name__)
 
 TR_CHARS = str.maketrans("şŞğĞüÜöÖçÇıİ", "sSgGuUoOcCiI")
 
-# Eşleştirmeye gürültü katan token'lar — normalize sonrası çıkarılır
 NOISE = {
     "(k)", "(w)", "(f)", "w", "kadin", "women", "feminin",
     "ii", "iii", "iv", "reserves", "res", "b",
@@ -54,45 +54,49 @@ NOISE = {
     "football", "futbol",
 }
 
-# Key'ler ASCII'ye çevrilmiş Türkçe (normalize() sonrası eşleşir)
-# "Karadağ" → TR_CHARS → "Karadag" → to_ascii → "karadag"
+# Key'ler normalize() sonrası karşılaştırılır (ASCII, küçük harf)
 TR_TO_EN: dict[str, str] = {
-    # Milli takımlar / ülkeler
     "kuzey irlanda":    "northern ireland",
+    "suudi arabistan":  "saudi arabia",
+    "fildisi sahili":   "ivory coast",
+    "faroe adalari":    "faroe islands",
+    "guney kore":       "south korea",
+    "kosta rika":       "costa rica",
+    "sri lanka":        "sri lanka",
+    "cin halk cumhuriyeti": "china",
     "singapur":         "singapore",
-    "bangledes":        "bangladesh",  # ş→s
+    "bangledes":        "bangladesh",
+    "banglades":        "bangladesh",
     "maldivler":        "maldives",
     "tayvan":           "chinese taipei",
     "malezya":          "malaysia",
     "letonya":          "latvia",
     "litvanya":         "lithuania",
     "estonya":          "estonia",
-    "belcika":          "belgium",     # ç→c
-    "norvec":           "norway",      # ç→c
+    "belcika":          "belgium",
+    "norvec":           "norway",
     "polonya":          "poland",
     "danimarka":        "denmark",
     "fransa":           "france",
-    "hirvatistan":      "croatia",     # ı→i
+    "hirvatistan":      "croatia",
     "romanya":          "romania",
     "avustralya":       "australia",
     "kamerun":          "cameroon",
     "kazakistan":       "kazakhstan",
     "komorlar":         "comoros",
-    "cin":              "china",       # ç→c (tek kelime, çin→cin)
-    "karadag":          "montenegro",  # ğ→g
-    "isvicre":          "switzerland", # ş→s, ç→c
+    "karadag":          "montenegro",
+    "isvicre":          "switzerland",
     "lihtenstayn":      "liechtenstein",
-    "cekya":            "czech republic", # ç→c
+    "cekya":            "czech republic",
     "arnavutluk":       "albania",
     "avusturya":        "austria",
     "finlandiya":       "finland",
     "hollanda":         "netherlands",
     "ispanya":          "spain",
     "italya":           "italy",
-    "isvec":            "sweden",      # ç→c
+    "isvec":            "sweden",
     "iskocya":          "scotland",
     "japonya":          "japan",
-    "guney kore":       "south korea", # ü→u
     "portekiz":         "portugal",
     "yunanistan":       "greece",
     "almanya":          "germany",
@@ -104,110 +108,73 @@ TR_TO_EN: dict[str, str] = {
     "sirbistan":        "serbia",
     "bulgaristan":      "bulgaria",
     "cezayir":          "algeria",
-    "fas":              "morocco",
     "tunus":            "tunisia",
     "misir":            "egypt",
     "nijerya":          "nigeria",
     "gana":             "ghana",
-    "fildisi sahili":   "ivory coast",
     "arjantin":         "argentina",
     "brezilya":         "brazil",
     "kolombiya":        "colombia",
-    "sili":             "chile",       # ş→s
-    "uruguay":          "uruguay",
-    "paraguay":         "paraguay",
-    "ekvador":          "ecuador",
-    "bolivya":          "bolivia",
+    "sili":             "chile",
     "venezuela":        "venezuela",
+    "venezüela":        "venezuela",
     "meksika":          "mexico",
     "kanada":           "canada",
-    "kosta rika":       "costa rica",
     "jamaika":          "jamaica",
-    "iran":             "iran",
-    "irak":             "iraq",
-    "suudi arabistan":  "saudi arabia",
-    "katar":            "qatar",
-    "kuveyt":           "kuwait",
-    "urdun":            "jordan",      # ü→u
+    "urdun":            "jordan",
     "suriye":           "syria",
-    "lubnan":           "lebanon",     # ü→u
+    "lubnan":           "lebanon",
     "israil":           "israel",
     "hindistan":        "india",
     "tayland":          "thailand",
     "endonezya":        "indonesia",
     "filipinler":       "philippines",
-    "ozbekistan":       "uzbekistan",  # ö→o
+    "ozbekistan":       "uzbekistan",
     "azerbaycan":       "azerbaijan",
-    "gurcistan":        "georgia",     # ü→u
+    "gurcistan":        "georgia",
     "ermenistan":       "armenia",
     "kirgizistan":      "kyrgyzstan",
     "tacikistan":       "tajikistan",
     "turkmenistan":     "turkmenistan",
     "galler":           "wales",
     "ingiltere":        "england",
-    "irlanda":          "ireland",
     "kibris":           "cyprus",
     "izlanda":          "iceland",
-    "faroe adalari":    "faroe islands",
-    "sri lanka":        "sri lanka",
-    "vietnam":          "vietnam",
-    "curacao":          "curacao",
+    "fas":              "morocco",
+    "cin":              "china",
+    "iran":             "iran",
+    "irak":             "iraq",
+    "katar":            "qatar",
+    "kuveyt":           "kuwait",
 }
 
 
 def to_ascii(s: str) -> str:
-    """Unicode → ASCII (é→e, ñ→n, ü→u, vb.)"""
     return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
 
 
 def normalize(name: str) -> str:
-    """
-    Eşleştirme için takım adını normalize eder:
-    1. Türkçe harf → Latin (ş→s, ğ→g, ü→u …)
-    2. Küçük harf + Unicode → ASCII
-    3. Türkçe ülke/milli takım adı → İngilizce
-    4. Parantez içleri sil
-    5. Noktalama → boşluk
-    6. Yaş grupları standartlaştır ("U 19" → "u19")
-    7. Gürültü tokenları çıkar (fc, sc, united, city …)
-    """
-    # Adım 1-2
     s = to_ascii(name.translate(TR_CHARS)).lower()
 
-    # Adım 3 — en uzun eşleşmeden başla (önce "kuzey irlanda", sonra "irlanda")
     for tr, en in sorted(TR_TO_EN.items(), key=lambda x: -len(x[0])):
         if s == tr or s.startswith(tr + " "):
             s = en + s[len(tr):]
             break
 
-    # Adım 4 — parantez içleri
     s = re.sub(r"\([^)]*\)", "", s)
-
-    # Adım 5 — noktalama
     s = re.sub(r"[.\-_/'\\]", " ", s)
-
-    # Adım 6 — "u 19" / "u-21" → "u19"
     s = re.sub(r"\bu\s*(\d{2})\b", r"u\1", s)
 
-    # Adım 7 — gürültü tokenları
     tokens = [t for t in s.split() if t not in NOISE]
     s = " ".join(tokens) if tokens else s.strip()
-
     return re.sub(r"\s+", " ", s).strip()
 
 
 def abbreviation_score(query: str, candidate: str) -> float:
-    """
-    Kısaltma eşleştirmesi:
-      "indep medell"  ↔  "independiente medellin"  → 100
-      "dep maldonado" ↔  "deportivo maldonado"      → 100
-    Her query token'ı, candidate token'larından birinin başlangıcıyla eşleşirse say.
-    """
     q_tokens = query.split()
     c_tokens = candidate.split()
     if not q_tokens or not c_tokens:
         return 0.0
-
     matched = 0
     for qt in q_tokens:
         qt_clean = qt.rstrip(".")
@@ -216,30 +183,19 @@ def abbreviation_score(query: str, candidate: str) -> float:
             if ct.startswith(qt_clean) or qt_clean.startswith(ct[:min_len]):
                 matched += 1
                 break
-
     ratio = matched / max(len(q_tokens), len(c_tokens))
-    if matched == len(q_tokens):          # query tamamen eşleşti → bonus
+    if matched == len(q_tokens):
         ratio = min(1.0, ratio * 1.1)
     return round(ratio * 100, 1)
 
 
 def smart_score(query_raw: str, candidate_raw: str) -> float:
-    """
-    5 farklı stratejinin maksimumunu döner:
-    • token_sort_ratio  — token sırası farksız edit distance
-    • token_set_ratio   — ortak token seti oranı
-    • partial_ratio     — alt-string / kısmi eşleşme
-    • ratio             — düz Levenshtein
-    • abbreviation_score — kısaltma mantığı
-    """
     q = normalize(query_raw)
     c = normalize(candidate_raw)
-
     if not q or not c:
         return 0.0
     if q == c:
         return 100.0
-
     return max(
         fuzz.token_sort_ratio(q, c),
         fuzz.token_set_ratio(q, c),
@@ -249,7 +205,7 @@ def smart_score(query_raw: str, candidate_raw: str) -> float:
     )
 
 
-# ── GitHub & DB ───────────────────────────────────────────────────────────────
+# ── GitHub ────────────────────────────────────────────────────────────────────
 
 
 def fetch_github_teams() -> list[dict]:
@@ -261,29 +217,56 @@ def fetch_github_teams() -> list[dict]:
     return teams
 
 
-def get_live_teams(cur) -> list[dict]:
-    cur.execute("""
-        SELECT DISTINCT home_team_id AS team_id, home_team AS team_name
-        FROM live_matches
-        UNION
-        SELECT DISTINCT away_team_id, away_team
-        FROM live_matches
-    """)
-    rows = [{"team_id": r[0], "team_name": r[1]} for r in cur.fetchall()]
+# ── Supabase yardımcıları ─────────────────────────────────────────────────────
+
+
+def get_live_teams(sb: Client) -> list[dict]:
+    """live_matches tablosundaki tüm benzersiz takımları döner."""
+    # home takımlar
+    home = (
+        sb.table("live_matches")
+        .select("home_team_id, home_team")
+        .execute()
+        .data
+    )
+    # away takımlar
+    away = (
+        sb.table("live_matches")
+        .select("away_team_id, away_team")
+        .execute()
+        .data
+    )
+
+    seen = {}
+    for r in home:
+        tid = r["home_team_id"]
+        if tid not in seen:
+            seen[tid] = r["home_team"]
+    for r in away:
+        tid = r["away_team_id"]
+        if tid not in seen:
+            seen[tid] = r["away_team"]
+
+    rows = [{"team_id": k, "team_name": v} for k, v in seen.items()]
     log.info("%d benzersiz takım bulundu", len(rows))
     return rows
 
 
-def get_overrides(cur) -> dict[int, dict]:
-    """team_logo_override'daki manuel düzeltmeleri döner."""
-    cur.execute("""
-        SELECT live_team_id, gh_team_id, gh_team_name, api_logo
-        FROM team_logo_override
-    """)
-    return {
-        r[0]: {"gh_team_id": r[1], "gh_team_name": r[2], "api_logo": r[3]}
-        for r in cur.fetchall()
-    }
+def get_overrides(sb: Client) -> dict[int, dict]:
+    """team_logo_override tablosundaki manuel düzeltmeleri döner."""
+    try:
+        data = sb.table("team_logo_override").select("*").execute().data
+        return {
+            r["live_team_id"]: {
+                "gh_team_id":   r.get("gh_team_id"),
+                "gh_team_name": r.get("gh_team_name"),
+                "api_logo":     r["api_logo"],
+            }
+            for r in data
+        }
+    except Exception:
+        log.warning("team_logo_override tablosu bulunamadı, atlanıyor.")
+        return {}
 
 
 # ── Eşleştirme ────────────────────────────────────────────────────────────────
@@ -296,11 +279,12 @@ def match_teams(
 ) -> list[dict]:
     results  = []
     low_list = []
+    now      = datetime.now(timezone.utc).isoformat()
 
     for lt in live_teams:
         tid = lt["team_id"]
 
-        # 1. Manuel override var mı?
+        # 1. Manuel override
         if tid in overrides:
             ov = overrides[tid]
             results.append({
@@ -311,6 +295,7 @@ def match_teams(
                 "api_logo":       ov["api_logo"],
                 "match_score":    100.0,
                 "low_confidence": False,
+                "updated_at":     now,
             })
             continue
 
@@ -324,7 +309,7 @@ def match_teams(
                 best_score = s
                 best_team  = gh_team
             if s == 100.0:
-                break   # mükemmel eşleşme bulundu
+                break
 
         low = best_score < MIN_SCORE
 
@@ -336,6 +321,7 @@ def match_teams(
             "api_logo":       best_team.get("api_logo", "") if best_team else "",
             "match_score":    round(best_score, 1),
             "low_confidence": low,
+            "updated_at":     now,
         })
 
         if low:
@@ -346,99 +332,57 @@ def match_teams(
             )
 
     high = sum(1 for r in results if not r["low_confidence"])
-    log.info(
-        "Eşleştirme tamamlandı: %d yüksek güven, %d düşük güven",
-        high, len(results) - high,
-    )
+    log.info("Eşleştirme: %d yüksek güven, %d düşük güven", high, len(results) - high)
     if low_list:
-        log.warning(
-            "Düşük güven (%d) — live_matches'e yazılmadı:\n%s",
-            len(low_list), "\n".join(low_list),
-        )
-
+        log.warning("Düşük güven (%d) — live_matches'e yazılmadı:\n%s",
+                    len(low_list), "\n".join(low_list))
     return results
 
 
-# ── DB yazma ─────────────────────────────────────────────────────────────────
+# ── Supabase yazma ────────────────────────────────────────────────────────────
+
+BATCH = 500   # Supabase upsert batch boyutu
 
 
-def ensure_tables(cur):
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS team_logo_mapping (
-            live_team_id    INTEGER      PRIMARY KEY,
-            live_team_name  TEXT         NOT NULL,
-            gh_team_id      INTEGER,
-            gh_team_name    TEXT,
-            api_logo        TEXT,
-            match_score     NUMERIC(5,1),
-            low_confidence  BOOLEAN      DEFAULT FALSE,
-            updated_at      TIMESTAMPTZ  DEFAULT now()
+def upsert_mappings(sb: Client, results: list[dict]):
+    """team_logo_mapping tablosuna batch upsert yapar."""
+    for i in range(0, len(results), BATCH):
+        chunk = results[i : i + BATCH]
+        sb.table("team_logo_mapping").upsert(chunk).execute()
+        log.info("Upsert: %d / %d", min(i + BATCH, len(results)), len(results))
+
+
+def update_live_matches(sb: Client, results: list[dict]):
+    """
+    Yüksek güvenli eşleşmeleri live_matches tablosuna yazar.
+    home_logo ve away_logo sütunlarını günceller.
+    """
+    high = [r for r in results if not r["low_confidence"] and r.get("api_logo")]
+
+    home_updated = away_updated = 0
+
+    for r in high:
+        tid  = r["live_team_id"]
+        logo = r["api_logo"]
+
+        res = (
+            sb.table("live_matches")
+            .update({"home_logo": logo})
+            .eq("home_team_id", tid)
+            .execute()
         )
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS team_logo_override (
-            live_team_id   INTEGER      PRIMARY KEY,
-            live_team_name TEXT,
-            gh_team_id     INTEGER,
-            gh_team_name   TEXT,
-            api_logo       TEXT         NOT NULL,
-            note           TEXT,
-            created_at     TIMESTAMPTZ  DEFAULT now()
+        home_updated += len(res.data) if res.data else 0
+
+        res = (
+            sb.table("live_matches")
+            .update({"away_logo": logo})
+            .eq("away_team_id", tid)
+            .execute()
         )
-    """)
+        away_updated += len(res.data) if res.data else 0
 
-
-def upsert_mappings(cur, results: list[dict]):
-    rows = [
-        (
-            r["live_team_id"], r["live_team_name"],
-            r["gh_team_id"],   r["gh_team_name"],
-            r["api_logo"],     r["match_score"],
-            r["low_confidence"], datetime.now(timezone.utc),
-        )
-        for r in results
-    ]
-    psycopg2.extras.execute_values(cur, """
-        INSERT INTO team_logo_mapping
-            (live_team_id, live_team_name, gh_team_id, gh_team_name,
-             api_logo, match_score, low_confidence, updated_at)
-        VALUES %s
-        ON CONFLICT (live_team_id) DO UPDATE SET
-            live_team_name = EXCLUDED.live_team_name,
-            gh_team_id     = EXCLUDED.gh_team_id,
-            gh_team_name   = EXCLUDED.gh_team_name,
-            api_logo       = EXCLUDED.api_logo,
-            match_score    = EXCLUDED.match_score,
-            low_confidence = EXCLUDED.low_confidence,
-            updated_at     = EXCLUDED.updated_at
-    """, rows)
-    log.info("%d satır upsert edildi", len(rows))
-
-
-def update_live_matches(cur):
-    cur.execute("""
-        UPDATE live_matches lm
-        SET home_logo = m.api_logo
-        FROM team_logo_mapping m
-        WHERE lm.home_team_id  = m.live_team_id
-          AND m.low_confidence = FALSE
-          AND m.api_logo IS NOT NULL
-          AND m.api_logo <> ''
-    """)
-    home_n = cur.rowcount
-
-    cur.execute("""
-        UPDATE live_matches lm
-        SET away_logo = m.api_logo
-        FROM team_logo_mapping m
-        WHERE lm.away_team_id  = m.live_team_id
-          AND m.low_confidence = FALSE
-          AND m.api_logo IS NOT NULL
-          AND m.api_logo <> ''
-    """)
-    away_n = cur.rowcount
-
-    log.info("live_matches güncellendi — home: %d, away: %d satır", home_n, away_n)
+    log.info("live_matches güncellendi — home: %d, away: %d satır",
+             home_updated, away_updated)
 
 
 # ── Ana akış ─────────────────────────────────────────────────────────────────
@@ -447,35 +391,36 @@ def update_live_matches(cur):
 def main():
     log.info("=== team_logo_sync başladı ===")
 
+    # 1. GitHub'dan takımları çek
     try:
         gh_teams = fetch_github_teams()
     except Exception as e:
         log.error("GitHub hatası: %s", e)
         sys.exit(1)
 
+    # 2. Supabase istemcisi
     try:
-        conn = psycopg2.connect(DB_DSN)
-        conn.autocommit = False
+        sb = create_client(SUPABASE_URL, SUPABASE_KEY)
     except Exception as e:
-        log.error("DB bağlantı hatası: %s", e)
+        log.error("Supabase bağlantı hatası: %s", e)
         sys.exit(1)
 
-    try:
-        with conn.cursor() as cur:
-            ensure_tables(cur)
-            live_teams = get_live_teams(cur)
-            overrides  = get_overrides(cur)
-            results    = match_teams(live_teams, gh_teams, overrides)
-            upsert_mappings(cur, results)
-            update_live_matches(cur)
-        conn.commit()
-        log.info("=== team_logo_sync tamamlandı ===")
-    except Exception as e:
-        conn.rollback()
-        log.exception("Hata, rollback: %s", e)
-        sys.exit(1)
-    finally:
-        conn.close()
+    # 3. Live takımları al
+    live_teams = get_live_teams(sb)
+
+    # 4. Manuel override'ları al
+    overrides = get_overrides(sb)
+
+    # 5. Eşleştir
+    results = match_teams(live_teams, gh_teams, overrides)
+
+    # 6. Mapping tablosuna yaz
+    upsert_mappings(sb, results)
+
+    # 7. live_matches logolarını güncelle
+    update_live_matches(sb, results)
+
+    log.info("=== team_logo_sync tamamlandı ===")
 
 
 if __name__ == "__main__":
