@@ -1,0 +1,28 @@
+name: Team Logo Sync
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # UTC 03:00 = TR 06:00
+  workflow_dispatch:        # elle de tetiklenebilir
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repo'yu çek
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Bağımlılıkları yükle
+        run: pip install requests rapidfuzz psycopg2-binary
+
+      - name: Eşleştirmeyi çalıştır
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/team_logo_sync.py
