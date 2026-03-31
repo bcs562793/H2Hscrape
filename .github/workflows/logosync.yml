@@ -3,7 +3,7 @@ name: Team Logo Sync
 on:
   schedule:
     - cron: '0 3 * * *'   # UTC 03:00 = TR 06:00
-  workflow_dispatch:        # Actions sekmesinden elle de tetiklenebilir
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Bağımlılıkları yükle
         run: pip install requests rapidfuzz supabase
@@ -27,4 +26,3 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: python scripts/team_logo_sync.py
-  
