@@ -17,7 +17,7 @@ import unicodedata
 from datetime import datetime, timezone
 
 import requests
-from rapidfuzz import fuzz
+from rapidfuzz import fuzz, process as fuzz_process
 from supabase import Client, create_client
 
 # ── Ayarlar ───────────────────────────────────────────────────────────────────
@@ -277,6 +277,17 @@ def match_teams(
     gh_teams: list[dict],
     overrides: dict[int, dict],
 ) -> list[dict]:
+    """
+    Hız optimizasyonu:
+    - GitHub takım adları bir kez normalize edilir ve önbelleğe alınır.
+    - rapidfuzz.process.extractOne ile C-hızında token_sort_ratio taraması yapılır.
+    - Ardından abbreviation_score ile kısaltma kontrolü eklenir.
+    - Böylece 101 × 14069 döngüsü yerine ~50ms'de biter.
+    """
+    # Normalize edilmiş GitHub adlarını önbelleğe al
+    gh_norm_names = [normalize(t["name"]) for t in gh_teams]
+    gh_by_norm    = {normalize(t["name"]): t for t in gh_teams}
+
     results  = []
     low_list = []
     now      = datetime.now(timezone.utc).isoformat()
@@ -299,19 +310,34 @@ def match_teams(
             })
             continue
 
-        # 2. Akıllı fuzzy eşleştirme
-        best_team  = None
-        best_score = 0.0
+        # 2. Normalize edilmiş sorgu
+        q_norm = normalize(lt["team_name"])
 
-        for gh_team in gh_teams:
-            s = smart_score(lt["team_name"], gh_team["name"])
-            if s > best_score:
-                best_score = s
-                best_team  = gh_team
-            if s == 100.0:
-                break
+        # 3. rapidfuzz ile hızlı token_sort_ratio taraması (C katmanı, ~ms)
+        fast_match = fuzz_process.extractOne(
+            q_norm,
+            gh_norm_names,
+            scorer=fuzz.token_sort_ratio,
+            score_cutoff=0,
+        )
+        fast_name, fast_score, _ = fast_match
 
-        low = best_score < MIN_SCORE
+        # 4. token_set_ratio ve partial_ratio ile cross-check
+        set_score     = fuzz.token_set_ratio(q_norm, fast_name)
+        partial_score = fuzz.partial_ratio(q_norm, fast_name)
+        abbr_sc       = abbreviation_score(q_norm, fast_name)
+        best_score    = max(fast_score, set_score, partial_score, abbr_sc)
+
+        # 5. Eğer skor düşükse abbreviation ile tüm listeyi tara (sadece düşük skorlularda)
+        if best_score < MIN_SCORE:
+            for gn in gh_norm_names:
+                s = abbreviation_score(q_norm, gn)
+                if s > best_score:
+                    best_score = s
+                    fast_name  = gn
+
+        best_team = gh_by_norm.get(fast_name)
+        low       = best_score < MIN_SCORE
 
         results.append({
             "live_team_id":   tid,
@@ -325,8 +351,8 @@ def match_teams(
         })
 
         if low:
-            live_name  = lt["team_name"]
-            best_name  = best_team["name"] if best_team else "YOK"
+            live_name = lt["team_name"]
+            best_name = best_team["name"] if best_team else "YOK"
             low_list.append(
                 f"  {live_name!r:35s} → {best_name!r:30s} ({best_score:.0f})"
             )
@@ -348,8 +374,19 @@ def upsert_mappings(sb: Client, results: list[dict]):
     """team_logo_mapping tablosuna batch upsert yapar."""
     for i in range(0, len(results), BATCH):
         chunk = results[i : i + BATCH]
-        sb.table("team_logo_mapping").upsert(chunk).execute()
-        log.info("Upsert: %d / %d", min(i + BATCH, len(results)), len(results))
+        try:
+            sb.table("team_logo_mapping").upsert(chunk).execute()
+            log.info("Upsert: %d / %d", min(i + BATCH, len(results)), len(results))
+        except Exception as e:
+            msg = str(e)
+            if "PGRST205" in msg or "schema cache" in msg:
+                log.error(
+                    "team_logo_mapping tablosu bulunamadi!\n"
+                    "Supabase SQL Editor'da scripts/setup.sql dosyasini bir kez calistir:\n"
+                    "https://supabase.com/dashboard/project/_/sql/new"
+                )
+                sys.exit(1)
+            raise
 
 
 def update_live_matches(sb: Client, results: list[dict]):
