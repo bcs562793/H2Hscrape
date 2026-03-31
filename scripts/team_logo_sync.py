@@ -389,37 +389,14 @@ def upsert_mappings(sb: Client, results: list[dict]):
             raise
 
 
-def update_live_matches(sb: Client, results: list[dict]):
+def update_live_matches(sb: Client):
     """
-    Yüksek güvenli eşleşmeleri live_matches tablosuna yazar.
-    home_logo ve away_logo sütunlarını günceller.
+    team_logo_mapping tablosunu JOIN'leyerek live_matches logolarını
+    tek bir SQL fonksiyonu çağrısıyla günceller.
+    setup.sql'deki sync_live_match_logos() fonksiyonunu kullanır.
     """
-    high = [r for r in results if not r["low_confidence"] and r.get("api_logo")]
-
-    home_updated = away_updated = 0
-
-    for r in high:
-        tid  = r["live_team_id"]
-        logo = r["api_logo"]
-
-        res = (
-            sb.table("live_matches")
-            .update({"home_logo": logo})
-            .eq("home_team_id", tid)
-            .execute()
-        )
-        home_updated += len(res.data) if res.data else 0
-
-        res = (
-            sb.table("live_matches")
-            .update({"away_logo": logo})
-            .eq("away_team_id", tid)
-            .execute()
-        )
-        away_updated += len(res.data) if res.data else 0
-
-    log.info("live_matches güncellendi — home: %d, away: %d satır",
-             home_updated, away_updated)
+    sb.rpc("sync_live_match_logos", {}).execute()
+    log.info("live_matches logoları güncellendi (sync_live_match_logos RPC)")
 
 
 # ── Ana akış ─────────────────────────────────────────────────────────────────
@@ -455,7 +432,7 @@ def main():
     upsert_mappings(sb, results)
 
     # 7. live_matches logolarını güncelle
-    update_live_matches(sb, results)
+    update_live_matches(sb)
 
     log.info("=== team_logo_sync tamamlandı ===")
 
