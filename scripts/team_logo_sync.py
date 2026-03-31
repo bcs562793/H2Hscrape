@@ -325,10 +325,10 @@ def match_teams(
         })
 
         if low:
+            live_name  = lt["team_name"]
+            best_name  = best_team["name"] if best_team else "YOK"
             low_list.append(
-                f"  {lt['team_name']!r:35s} → "
-                f"{best_team['name']!r if best_team else 'YOK':30s} "
-                f"({best_score:.0f})"
+                f"  {live_name!r:35s} → {best_name!r:30s} ({best_score:.0f})"
             )
 
     high = sum(1 for r in results if not r["low_confidence"])
