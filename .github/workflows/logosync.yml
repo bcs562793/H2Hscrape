@@ -2,26 +2,29 @@ name: Team Logo Sync
 
 on:
   schedule:
-    - cron: '0 3 * * *'   # UTC 03:00 = TR 06:00
-  workflow_dispatch:
+    - cron: "0 3 * * *"   # Her gün TR 06:00 = UTC 03:00
+  workflow_dispatch:       # Elle de tetiklenebilir
 
 jobs:
   sync:
+    name: Sync team logos
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - name: Repo'yu çek
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Python kur
+      - name: Python kurulumu
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+          cache: pip
 
       - name: Bağımlılıkları yükle
         run: pip install requests rapidfuzz supabase
 
-      - name: Eşleştirmeyi çalıştır
+      - name: Tanı + Eşleştirme + Yükle
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
