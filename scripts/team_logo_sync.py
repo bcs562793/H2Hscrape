@@ -440,9 +440,11 @@ def upsert_mappings(sb: Client, results: list[dict]) -> None:
             raise
 
 
-def update_live_matches(sb: Client) -> None:
+def update_logos(sb: Client) -> None:
     sb.rpc("sync_live_match_logos", {}).execute()
     log.info("live_matches logoları güncellendi")
+    sb.rpc("sync_future_match_logos", {}).execute()
+    log.info("future_matches.data logoları güncellendi")
 
 
 # ── Ana akış ─────────────────────────────────────────────────────────────────
@@ -476,7 +478,7 @@ def main() -> None:
 
     # 6. Yaz
     upsert_mappings(sb, results)
-    update_live_matches(sb)
+    update_logos(sb)
 
     log.info("=== team_logo_sync tamamlandı ===")
 
