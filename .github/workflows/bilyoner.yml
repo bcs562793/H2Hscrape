@@ -1,0 +1,27 @@
+name: Bilyoner Name Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Bilyoner ↔ teams.json eşleşme raporu
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Bağımlılıkları yükle
+        run: pip install -r requirements.txt
+
+      - name: Raporu çalıştır
+        run: python scripts/bilyoner_name_test.py
