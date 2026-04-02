@@ -2,14 +2,15 @@
 build_teams_json.py
 ===================
 CSV dosyalarından (future_matches_rows.csv ve live_matches_rows.csv) tüm
-takımları okur, Mackolik CDN'inden logoları indirir ve data/teams.json'a yazar.
+takımları okur, Mackolik CDN'inden logoları indirir ve data/teams_new.json'a yazar.
 
 Kullanım:
     python build_teams_json.py
 
 Proje yapısı (H2Hscrape):
     data/
-        teams.json          ← bu script tarafından oluşturulur / güncellenir
+        teams.json          ← mevcut/eski verileri okumak için
+        teams_new.json      ← YENİ ÇIKTI DOSYASI (bu script oluşturur)
         logos/              ← indirilen .gif dosyaları {team_id}.gif
     future_matches_rows.csv
     live_matches_rows.csv
@@ -38,7 +39,11 @@ import requests
 BASE_DIR         = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR         = os.path.join(BASE_DIR, "data")
 LOGOS_DIR        = os.path.join(DATA_DIR, "logos")
+
+# Okunacak eski dosya ve YAZILACAK yeni dosya yolları
 TEAMS_JSON       = os.path.join(DATA_DIR, "teams.json")
+TEAMS_OUT_JSON   = os.path.join(DATA_DIR, "teams_new.json")
+
 LIVE_CSV         = os.path.join(BASE_DIR, "live_matches_rows.csv")
 FUTURE_CSV       = os.path.join(BASE_DIR, "future_matches_rows.csv")
 
@@ -188,12 +193,12 @@ def download_logos(teams: dict[str, dict]) -> dict[str, dict]:
     return teams
 
 
-# ── 4. teams.json yaz ────────────────────────────────────────────────────────
+# ── 4. Yeni JSON dosyasına yaz ───────────────────────────────────────────────
 def save_teams_json(teams: dict[str, dict]) -> None:
-    """Takım sözlüğünü data/teams.json'a yazar."""
-    with open(TEAMS_JSON, "w", encoding="utf-8") as f:
+    """Takım sözlüğünü data/teams_new.json'a yazar."""
+    with open(TEAMS_OUT_JSON, "w", encoding="utf-8") as f:
         json.dump(teams, f, ensure_ascii=False, indent=2)
-    print(f"\n[JSON] {len(teams)} takım → {TEAMS_JSON}")
+    print(f"\n[JSON] {len(teams)} takım → {TEAMS_OUT_JSON}")
 
 
 # ── 5. Ana akış ──────────────────────────────────────────────────────────────
@@ -216,7 +221,7 @@ def main() -> None:
     print(f"  Mackolik logolu  : {mac_logos}  (local: {local_logos})")
     print(f"  API-Sports logolu: {api_logos}")
     print(f"  Logolar klasörü  : {LOGOS_DIR}")
-    print(f"  Çıktı JSON       : {TEAMS_JSON}")
+    print(f"  Çıktı JSON       : {TEAMS_OUT_JSON}")
 
 
 if __name__ == "__main__":
