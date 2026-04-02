@@ -1,0 +1,32 @@
+name: Logolari Cek
+
+on:
+  workflow_dispatch: # Sizin manuel tetiklemeniz için
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repoyu Çek
+        uses: actions/checkout@v3
+
+      - name: Python Kurulumu
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Gerekli Kütüphaneleri Kur
+        run: pip install requests
+
+      # İŞTE BURASI DEĞİŞİYOR: node fetcher.js yerine python dosyamızı çalıştırıyoruz
+      - name: Logoları İndir ve JSON Oluştur
+        run: python build_teams_json.py
+
+      - name: Değişiklikleri Kaydet (Commit & Push)
+        run: |
+          git config --global user.name 'GitHub Action Bot'
+          git config --global user.email 'action@github.com'
+          git add data/
+          git commit -m "Logolar ve teams_new.json güncellendi" || echo "Değişiklik yok"
+          git push
