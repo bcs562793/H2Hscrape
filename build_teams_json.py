@@ -1,228 +1,204 @@
+#!/usr/bin/env python3
 """
-build_teams_json.py
-===================
-CSV dosyalarından (future_matches_rows.csv ve live_matches_rows.csv) tüm
-takımları okur, Mackolik CDN'inden logoları indirir ve data/teams_new.json'a yazar.
+build_combined_teams.py
+───────────────────────
+teams.json (api-sports, 14 k takım)  +  teams_new.json (mackolik, 9.6 k takım)
+→ combined_teams.json
 
-Kullanım:
-    python build_teams_json.py
+Her kayıt:
+  n  – canonical takım adı
+  c  – ülke
+  l  – en iyi logo (api-sports.io ≥ mackolik cdn)
+  m  – mackolik logo (boş olabilir)
 
-Proje yapısı (H2Hscrape):
-    data/
-        teams.json          ← mevcut/eski verileri okumak için
-        teams_new.json      ← YENİ ÇIKTI DOSYASI (bu script oluşturur)
-        logos/              ← indirilen .gif dosyaları {team_id}.gif
-    future_matches_rows.csv
-    live_matches_rows.csv
-    build_teams_json.py     ← bu dosya
-
-Veri kaynakları:
-    live_matches_rows.csv  → kolonlar: home_team_id, home_team, home_logo,
-                                        away_team_id, away_team, away_logo
-    future_matches_rows.csv → kolon: data (JSON içinde teams.home / teams.away)
-
-Logo mantığı:
-    • logo URL'si im.mackolik.com içeriyorsa → indir, local path yaz
-    • logo URL'si api-sports.io içeriyorsa   → URL'yi olduğu gibi bırak
-    • live_matches logosu mackolik ise future'daki aynı takımın api-sports
-      logosunun üzerine yaz (mackolik her zaman öncelikli)
+Çalıştır:
+  python3 build_combined_teams.py teams.json teams_new.json combined_teams.json
 """
 
-import csv
-import json
-import os
-import re
-import time
-import requests
+import json, re, os, sys
+from collections import defaultdict
 
-# ── Ayarlar ──────────────────────────────────────────────────────────────────
-BASE_DIR         = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR         = os.path.join(BASE_DIR, "data")
-LOGOS_DIR        = os.path.join(DATA_DIR, "logos")
+# ── Normalize ─────────────────────────────────────────────────────────────────
 
-# Okunacak eski dosya ve YAZILACAK yeni dosya yolları
-TEAMS_JSON       = os.path.join(DATA_DIR, "teams.json")
-TEAMS_OUT_JSON   = os.path.join(DATA_DIR, "teams_new.json")
-
-LIVE_CSV         = os.path.join(BASE_DIR, "live_matches_rows.csv")
-FUTURE_CSV       = os.path.join(BASE_DIR, "future_matches_rows.csv")
-
-MACKOLIK_LOGO    = "https://im.mackolik.com/img/logo/buyuk/{id}.gif"
-REQUEST_DELAY    = 0.15   # saniye - sunucuyu yormamak için
-REQUEST_TIMEOUT  = 8      # saniye
-
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    )
+# Takım adlarında anlamsız kısaltmalar (FC, SC, …)
+# "rb" kasıtlı dahil EDİLMEDİ → "RB Leipzig" / "RB Bragantino" ayrıştırılsın diye
+NOISE = {
+    'fc','sc','cf','ac','bk','sk','fk','afc','bfc','cfc','sfc','rfc',
+    'cp','cd','sd','ud','rc','rcd','ss','svv','sv','rv','mv','nv','bv',
+    'ov','dv','jv','lv','hsv','bsc','ik','il','is','vv','bss',
 }
 
-os.makedirs(LOGOS_DIR, exist_ok=True)
+TR_MAP = [
+    ('ş','s'),('ğ','g'),('ü','u'),('ö','o'),('ç','c'),('ı','i'),('İ','i'),
+    ('é','e'),('è','e'),('ê','e'),('ë','e'),
+    ('á','a'),('à','a'),('â','a'),('ã','a'),('ä','a'),('å','a'),
+    ('ó','o'),('ò','o'),('ô','o'),('õ','o'),('ø','o'),
+    ('ú','u'),('ù','u'),('û','u'),
+    ('í','i'),('ì','i'),('î','i'),
+    ('ñ','n'),('ć','c'),('č','c'),('ž','z'),('š','s'),('ý','y'),
+    ('ř','r'),('ß','ss'),('ł','l'),('ę','e'),('ą','a'),('ń','n'),
+    ('ź','z'),('ż','z'),('ő','o'),('ű','u'),('ě','e'),('ț','t'),('ș','s'),
+]
+
+def norm(s: str) -> str:
+    s = s.lower().strip()
+    for src, dst in TR_MAP:
+        s = s.replace(src, dst)
+    s = re.sub(r"[.\-_/'\\()\[\]+&]", ' ', s)
+    tokens = [t for t in s.split() if t and t not in NOISE]
+    return ' '.join(tokens).strip()
 
 
-# ── 1. CSV'lerden takım verisi topla ─────────────────────────────────────────
-def load_teams_from_csvs() -> dict[str, dict]:
+# ── Yardımcı: api-sports eşleştirme ──────────────────────────────────────────
+
+def build_api_index(teams_api):
+    idx = defaultdict(list)
+    for t in teams_api:
+        idx[norm(t['name'])].append(t)
+    return idx
+
+
+def best_api(name: str, prefer_country: str, api_idx: dict):
     """
-    Her iki CSV'yi okuyarak takım sözlüğü döndürür.
-    Yapı: { "team_id_str": {"id": int, "name": str, "logo": str} }
+    'name' için api-sports tablosunda en iyi eşleşmeyi döner.
+    Strateji:
+      1. Tam isim eşleşmesi
+      2. Suffix drop  : "Charlton Athletic" → "charlton athletic" → drop "athletic" → "charlton"
+      3. Prefix token : "Bragantino" → candidates with "bragantino" token
+    Ülke eşleşmesi varsa öncelik verilir.
     """
-    teams: dict[str, dict] = {}
+    n = norm(name)
+    candidates = api_idx.get(n, [])
 
-    # --- future_matches_rows.csv ---
-    if os.path.exists(FUTURE_CSV):
-        with open(FUTURE_CSV, encoding="utf-8") as f:
-            for row in csv.DictReader(f):
-                try:
-                    data = json.loads(row["data"])
-                    for side in ("home", "away"):
-                        t = data["teams"][side]
-                        tid = str(t["id"])
-                        teams[tid] = {
-                            "id":   t["id"],
-                            "name": t["name"],
-                            "logo": t.get("logo", ""),
-                        }
-                except Exception:
-                    pass
-        print(f"[CSV]  future_matches → {len(teams)} takım")
+    if not candidates:
+        tokens = n.split()
+        # Suffix drop  (1..2 kelime)
+        for drop in range(1, min(3, len(tokens))):
+            partial = ' '.join(tokens[:-drop])
+            if len(partial) >= 4 and partial in api_idx:
+                candidates = api_idx[partial]
+                break
+
+    if not candidates:
+        # Prefix: herhangi bir uzun token içinde geçiyor mu?
+        tokens = n.split()
+        for subtoken in tokens:
+            if len(subtoken) >= 6:
+                for api_n, api_list in api_idx.items():
+                    if subtoken in api_n.split():   # token tam eşleşmesi
+                        candidates = api_list
+                        break
+            if candidates:
+                break
+
+    if not candidates:
+        return None, ''
+
+    pc = prefer_country.lower()
+    for c in candidates:
+        if (c.get('country') or '').lower() == pc:
+            return c['api_logo'], c.get('country', '')
+    return candidates[0]['api_logo'], candidates[0].get('country', '')
+
+
+# ── Ana işlev ─────────────────────────────────────────────────────────────────
+
+def build_combined(teams_api_path: str, teams_mk_path: str, out_path: str):
+    with open(teams_api_path, encoding='utf-8') as f:
+        teams_api = json.load(f)
+    with open(teams_mk_path, encoding='utf-8') as f:
+        teams_mk  = json.load(f)
+
+    api_idx = build_api_index(teams_api)
+
+    # (norm_name, country_lower) → entry dict
+    store: dict[tuple, dict] = {}
+
+    def add(name, country, logo_api, logo_mk=''):
+        n = norm(name)
+        if not n or not (logo_api or logo_mk):
+            return
+        c = (country or '').strip()
+        key = (n, c.lower())
+        if key not in store:
+            store[key] = {
+                'n': name,
+                'c': c,
+                'l': logo_api or logo_mk,
+                'm': logo_mk,
+            }
+        else:
+            e = store[key]
+            # api-sports logosu daha iyiyse güncelle
+            if logo_api and 'api-sports.io' in logo_api and 'api-sports.io' not in e['l']:
+                e['l'] = logo_api
+            # mackolik logo ekle
+            if logo_mk and not e['m']:
+                e['m'] = logo_mk
+
+    # ── 1. Tüm api-sports takımlarını ekle ────────────────────────────────────
+    for t in teams_api:
+        add(t['name'], t.get('country',''), t['api_logo'])
+
+    # ── 2. teams_new (mackolik) → bağla veya yeni ekle ───────────────────────
+    linked = 0; added = 0
+
+    for mk in teams_mk:
+        mk_name   = mk['name']
+        mk_logo   = mk['api_logo']    # mackolik CDN URL
+
+        api_logo, api_country = best_api(mk_name, '', api_idx)
+
+        if api_logo:
+            # teams_new adını da ayrı bir giriş olarak ekle (alias etkisi)
+            add(mk_name, api_country, api_logo, mk_logo)
+            # Orijinal api-sports girişine de mackolik logoyu bağla
+            n_mk = norm(mk_name)
+            for cnd in api_idx.get(n_mk, []):
+                ck = (norm(cnd['name']), (cnd.get('country') or '').lower())
+                if ck in store and not store[ck]['m']:
+                    store[ck]['m'] = mk_logo
+            linked += 1
+        else:
+            # Sadece mackolik'te olan takım
+            add(mk_name, '', mk_logo, mk_logo)
+            added += 1
+
+    result = list(store.values())
+
+    with open(out_path, 'w', encoding='utf-8') as f:
+        json.dump(result, f, ensure_ascii=False, separators=(',', ':'))
+
+    size = os.path.getsize(out_path)
+    print(f'✅ {out_path}')
+    print(f'   Toplam giriş    : {len(result):,}')
+    print(f'   api-sports base : {len(teams_api):,}')
+    print(f'   mackolik bağlı  : {linked:,} / {len(teams_mk):,}')
+    print(f'   mackolik yeni   : {added:,}')
+    print(f'   Dosya boyutu    : {size//1024:,} KB')
+
+    # Hızlı doğrulama
+    ni = defaultdict(list)
+    for e in result:
+        ni[norm(e['n'])].append(e)
+
+    tests = ['Charlton Athletic','Leicester City','Flamengo','Bragantino',
+             'RB Bragantino','Galatasaray','Vendsyssel','Al-Jandal',
+             'Gençlerbirliği','Fenerbahçe','Preston North End','Real Madrid']
+    print('\nDoğrulama:')
+    for name in tests:
+        found = ni.get(norm(name), [])
+        if found:
+            e = found[0]
+            src = 'api✅' if 'api-sports.io' in e['l'] else 'mk⚠️'
+            print(f'  ✅ {name:<25} → {e["n"]} ({e["c"]}) [{src}]')
+        else:
+            print(f'  ❌ {name:<25} → BULUNAMADI')
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 4:
+        build_combined(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
-        print(f"[UYARI] {FUTURE_CSV} bulunamadı, atlanıyor.")
-
-    # --- live_matches_rows.csv ---
-    live_count = 0
-    if os.path.exists(LIVE_CSV):
-        with open(LIVE_CSV, encoding="utf-8") as f:
-            for row in csv.DictReader(f):
-                for id_col, name_col, logo_col in (
-                    ("home_team_id", "home_team", "home_logo"),
-                    ("away_team_id", "away_team", "away_logo"),
-                ):
-                    tid = row.get(id_col, "").strip()
-                    if not tid:
-                        continue
-                    logo = row.get(logo_col, "").strip()
-                    name = row.get(name_col, "").strip()
-
-                    # Mackolik logosu varsa future verisinin üstüne yaz
-                    if tid not in teams or "im.mackolik.com" in logo:
-                        teams[tid] = {"id": int(tid), "name": name, "logo": logo}
-                        live_count += 1
-
-        print(f"[CSV]  live_matches   → {live_count} takım eklendi/güncellendi")
-    else:
-        print(f"[UYARI] {LIVE_CSV} bulunamadı, atlanıyor.")
-
-    print(f"[CSV]  Toplam benzersiz takım: {len(teams)}")
-    return teams
-
-
-# ── 2. Var olan teams.json ile birleştir ─────────────────────────────────────
-def merge_with_existing(new_teams: dict[str, dict]) -> dict[str, dict]:
-    """Varsa mevcut teams.json'u yükler, yeni verilerle birleştirir."""
-    if not os.path.exists(TEAMS_JSON):
-        return new_teams
-
-    with open(TEAMS_JSON, encoding="utf-8") as f:
-        existing = json.load(f)
-
-    before = len(existing)
-    for tid, v in new_teams.items():
-        # Mackolik logolu yeni veri her zaman kazanır
-        if tid not in existing or "im.mackolik.com" in v.get("logo", ""):
-            existing[tid] = v
-
-    print(f"[JSON] Mevcut: {before} → Birleştirilmiş: {len(existing)} takım")
-    return existing
-
-
-# ── 3. Mackolik logolarını indir ─────────────────────────────────────────────
-def _mackolik_id_from_url(logo_url: str) -> str | None:
-    """Logo URL'sinden mackolik takım ID'sini çıkarır."""
-    m = re.search(r"/buyuk/(\d+)\.gif", logo_url)
-    return m.group(1) if m else None
-
-
-def download_logos(teams: dict[str, dict]) -> dict[str, dict]:
-    """
-    im.mackolik.com'lu logo URL'si olan takımların .gif dosyasını indirir.
-    Logo indirildikten sonra 'logo_local' alanına yerel path kaydedilir.
-    """
-    session = requests.Session()
-    session.headers.update(HEADERS)
-
-    mackolik_teams = {
-        tid: v for tid, v in teams.items()
-        if "im.mackolik.com" in v.get("logo", "")
-    }
-
-    print(f"\n[İNDİR] {len(mackolik_teams)} takım için Mackolik logosu indiriliyor…")
-    ok = skip = fail = 0
-
-    for tid, team in sorted(mackolik_teams.items(), key=lambda x: int(x[0])):
-        mac_id    = _mackolik_id_from_url(team["logo"]) or tid
-        logo_url  = MACKOLIK_LOGO.format(id=mac_id)
-        local_path = os.path.join(LOGOS_DIR, f"{mac_id}.gif")
-        rel_path   = f"data/logos/{mac_id}.gif"   # proje köküne göre relative
-
-        # Zaten varsa atla
-        if os.path.exists(local_path) and os.path.getsize(local_path) > 100:
-            teams[tid]["logo_local"] = rel_path
-            skip += 1
-            continue
-
-        try:
-            r = session.get(logo_url, timeout=REQUEST_TIMEOUT)
-            if r.status_code == 200 and len(r.content) > 100:
-                with open(local_path, "wb") as f:
-                    f.write(r.content)
-                teams[tid]["logo_local"] = rel_path
-                print(f"  ✓ {mac_id:>8}  {team['name']}")
-                ok += 1
-            else:
-                print(f"  ✗ {mac_id:>8}  {team['name']}  [{r.status_code}]")
-                fail += 1
-        except Exception as e:
-            print(f"  ! {mac_id:>8}  {team['name']}  HATA: {e}")
-            fail += 1
-
-        time.sleep(REQUEST_DELAY)
-
-    print(f"\n[İNDİR] Tamamlandı → ✓ {ok} yeni  ⏭ {skip} zaten var  ✗ {fail} başarısız")
-    return teams
-
-
-# ── 4. Yeni JSON dosyasına yaz ───────────────────────────────────────────────
-def save_teams_json(teams: dict[str, dict]) -> None:
-    """Takım sözlüğünü data/teams_new.json'a yazar."""
-    with open(TEAMS_OUT_JSON, "w", encoding="utf-8") as f:
-        json.dump(teams, f, ensure_ascii=False, indent=2)
-    print(f"\n[JSON] {len(teams)} takım → {TEAMS_OUT_JSON}")
-
-
-# ── 5. Ana akış ──────────────────────────────────────────────────────────────
-def main() -> None:
-    print("=" * 60)
-    print("  H2Hscrape – Teams JSON & Logo Builder")
-    print("=" * 60, "\n")
-
-    teams   = load_teams_from_csvs()
-    teams   = merge_with_existing(teams)
-    teams   = download_logos(teams)
-    save_teams_json(teams)
-
-    # Özet
-    mac_logos   = sum(1 for v in teams.values() if "im.mackolik.com" in v.get("logo",""))
-    local_logos = sum(1 for v in teams.values() if v.get("logo_local"))
-    api_logos   = sum(1 for v in teams.values() if "api-sports.io" in v.get("logo",""))
-    print(f"\n{'─'*60}")
-    print(f"  Toplam takım     : {len(teams)}")
-    print(f"  Mackolik logolu  : {mac_logos}  (local: {local_logos})")
-    print(f"  API-Sports logolu: {api_logos}")
-    print(f"  Logolar klasörü  : {LOGOS_DIR}")
-    print(f"  Çıktı JSON       : {TEAMS_OUT_JSON}")
-
-
-if __name__ == "__main__":
-    main()
+        # Varsayılan yollar
+        build_combined('teams.json', 'teams_new.json', 'combined_teams.json')
