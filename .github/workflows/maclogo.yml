@@ -1,4 +1,4 @@
-name: Logolari Cek
+name: maçkolik logo
 
 on:
   workflow_dispatch: # Sizin manuel tetiklemeniz için
