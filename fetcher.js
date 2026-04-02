@@ -7,7 +7,6 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // ── Ayarlar ──────────────────────────────────────────────────────────────────
 const DATA_DIR      = path.join(__dirname, 'data');
 const LOGOS_DIR     = path.join(__dirname, 'logos', 'teams');
-// Dosya adını istediğin gibi teams_new.json olarak ayarladık
 const TEAMS_FILE    = path.join(DATA_DIR, 'teams_new.json'); 
 const PROGRESS_FILE = path.join(DATA_DIR, 'mackolik_processed_ids.json');
 
@@ -15,14 +14,6 @@ const MACKOLIK_LOGO_URL = (id) => `https://im.mackolik.com/img/logo/buyuk/${id}.
 const MACKOLIK_LIVEDATA = (date) => `https://vd.mackolik.com/livedata?date=${date}&s=1`;
 
 const DAYS_TO_SCAN = 90; // 90 Günlük Tarama
-
-// Bilyoner Ayarları (Sadece isim eşleştirmesi için)
-const BILYONER_BASE = 'https://www.bilyoner.com';
-const BILYONER_HEADERS = {
-    'accept': 'application/json',
-    'platform-token': '40CAB7292CD83F7EE0631FC35A0AFC75',
-    'user-agent': 'Mozilla/5.0'
-};
 
 // ── Yardımcı: Tarih üret ──────────────────────────────────────────────────
 function generateDates(dayCount) {
@@ -44,7 +35,7 @@ async function collectTeamIdsFromMackolik() {
     const dates = generateDates(DAYS_TO_SCAN);
     const teamMap = {}; 
 
-    console.log(`\n[1/5] Mackolik API'den son ${DAYS_TO_SCAN} günün maçları taranıyor...`);
+    console.log(`\n[1/4] Mackolik API'den son ${DAYS_TO_SCAN} günün maçları taranıyor...`);
 
     for (const date of dates) {
         try {
@@ -74,8 +65,8 @@ async function collectTeamIdsFromMackolik() {
                 const awayId = match[3];
                 const awayName = match[4] || '';
 
-                if (homeId) teamMap[homeId] = { id: homeId, name: homeName, source: 'mackolik' };
-                if (awayId) teamMap[awayId] = { id: awayId, name: awayName, source: 'mackolik' };
+                if (homeId) teamMap[homeId] = { id: homeId, name: homeName };
+                if (awayId) teamMap[awayId] = { id: awayId, name: awayName };
             }
 
             process.stdout.write(`\r  ${date} → Bulunan Futbol Takımı: ${Object.keys(teamMap).length}  `);
@@ -89,36 +80,7 @@ async function collectTeamIdsFromMackolik() {
     return teamMap;
 }
 
-// ── 2. Bilyoner'den İsim Sözlüğünü Çek ────────────────────────────────────
-async function getBilyonerNamesDictionary() {
-    const bilyonerNames = {};
-    console.log(`\n[2/5] Bilyoner'den güncel takım isimleri çekiliyor (İsim ezmek için)...`);
-
-    const bulletinTypes = [1, 2]; // 1: Canlı, 2: Maç Önü
-
-    for (const bType of bulletinTypes) {
-        try {
-            const url = `${BILYONER_BASE}/api/v3/mobile/aggregator/gamelist/all/v1?tabType=1&bulletinType=${bType}`;
-            const res = await fetch(url, { headers: BILYONER_HEADERS, signal: AbortSignal.timeout(10000) });
-            
-            if (!res.ok) continue;
-
-            const data = await res.json();
-            const footballMatches = Object.values(data?.events || {}).filter(e => e.st === 1); // st:1 Futbol
-
-            for (const ev of footballMatches) {
-                if (ev.htpi && ev.htn) bilyonerNames[ev.htpi] = ev.htn;
-                if (ev.atpi && ev.atn) bilyonerNames[ev.atpi] = ev.atn;
-            }
-        } catch (err) {
-            // Sessizce atla
-        }
-    }
-    console.log(`  Bilyoner'den ${Object.keys(bilyonerNames).length} adet takım ismi sözlüğe eklendi.`);
-    return bilyonerNames;
-}
-
-// ── 3. Tek bir logo indir ─────────────────────────────────────────────────
+// ── 2. Tek bir logo indir ─────────────────────────────────────────────────
 async function downloadLogo(teamId) {
     const logoUrl   = MACKOLIK_LOGO_URL(teamId);
     const localPath = path.join(LOGOS_DIR, `${teamId}.gif`);
@@ -143,8 +105,8 @@ async function downloadLogo(teamId) {
     }
 }
 
-// ── 4. teams_new.json güncelle ────────────────────────────────────────────
-function updateTeamsJson(downloadedIds, bilyonerDictionary) {
+// ── 3. teams_new.json güncelle ────────────────────────────────────────────
+function updateTeamsJson(downloadedIds) {
     let teams = [];
     if (fs.existsSync(TEAMS_FILE)) {
         const raw = JSON.parse(fs.readFileSync(TEAMS_FILE));
@@ -152,7 +114,6 @@ function updateTeamsJson(downloadedIds, bilyonerDictionary) {
     }
 
     let added = 0;
-    let renamedCount = 0;
 
     for (const [idStr, info] of Object.entries(downloadedIds)) {
         const mackolikId = parseInt(idStr); // ID'yi integer yap
@@ -162,17 +123,11 @@ function updateTeamsJson(downloadedIds, bilyonerDictionary) {
 
         if (!exists) continue; 
 
-        // Bilyoner'de bu ID'nin karşılığı varsa o ismi kullan, yoksa Mackolik isminde kal
-        const finalName = bilyonerDictionary[mackolikId] || info.name;
-
         // Hem yeni format (mackolik_id) hem eski format (id) için kontrol
         const existing = teams.find(t => t.mackolik_id === mackolikId || t.id === mackolikId);
         
         if (existing) {
-            if (existing.name !== finalName) {
-                existing.name = finalName;
-                renamedCount++;
-            }
+            existing.name = info.name;
             existing.api_logo = logoUrl;
             existing.logo_local = localGif;
             existing.mackolik_id = mackolikId; // Garantilemek için ekle
@@ -180,7 +135,7 @@ function updateTeamsJson(downloadedIds, bilyonerDictionary) {
         } else {
             teams.push({
                 mackolik_id: mackolikId, // ARTIK DOĞRUDAN mackolik_id YAZIYORUZ
-                name:       finalName,
+                name:       info.name,
                 api_logo:   logoUrl,
                 logo_local: localGif
             });
@@ -189,18 +144,18 @@ function updateTeamsJson(downloadedIds, bilyonerDictionary) {
     }
 
     fs.writeFileSync(TEAMS_FILE, JSON.stringify(teams, null, 2));
-    console.log(`  teams_new.json güncellendi → Toplam ${teams.length} takım (${added} yeni eklendi, ${renamedCount} takım Bilyoner ismiyle güncellendi)`);
+    console.log(`  teams_new.json güncellendi → Toplam ${teams.length} takım (${added} yeni eklendi)`);
 }
 
-// ── 5. Git push ───────────────────────────────────────────────────────────
+// ── 4. Git push ───────────────────────────────────────────────────────────
 function gitPush() {
-    console.log('\n[5/5] Değişiklikler GitHub\'a yükleniyor...');
+    console.log('\n[4/4] Değişiklikler GitHub\'a yükleniyor...');
     try {
         try { execSync('git config user.email "bot@mackoliksync.local"'); } catch(e){}
         try { execSync('git config user.name "Data Bot"'); } catch(e){}
 
         execSync('git add .');
-        try { execSync('git commit -m "Otomatik Bot: Logolar (mackolik_id formatı) ve Bilyoner isimleri güncellendi"'); } 
+        try { execSync('git commit -m "Otomatik Bot: Logolar ve takımlar güncellendi (mackolik_id formatı)"'); } 
         catch { console.log('  Gönderilecek yeni değişiklik yok.'); return; }
         
         console.log('  GitHub\'dan güncel veriler çekiliyor (Pull)...');
@@ -216,7 +171,7 @@ function gitPush() {
 // ── Ana akış ─────────────────────────────────────────────────────────────
 async function start() {
     console.log('═'.repeat(60));
-    console.log('  90 Günlük Mackolik & Bilyoner Hibrit Botu (mackolik_id revizyonlu)');
+    console.log('  90 Günlük Mackolik Logo Botu (mackolik_id formatlı)');
     console.log('═'.repeat(60));
 
     if (!fs.existsSync(DATA_DIR))  fs.mkdirSync(DATA_DIR,  { recursive: true });
@@ -230,23 +185,20 @@ async function start() {
     // 1. 90 Günlük ID ve İsimleri Çek
     const mackolikTeams = await collectTeamIdsFromMackolik();
     
-    // 2. Bilyoner'den Sadece İsimleri Çek
-    const bilyonerDictionary = await getBilyonerNamesDictionary();
-
     const allIds = Object.keys(mackolikTeams).map(Number).sort((a, b) => a - b);
     const remaining = allIds.filter(id => !processedIds.has(id));
 
-    console.log(`\n[3/5] İşlem Özeti:`);
+    console.log(`\n[2/4] İşlem Özeti:`);
     console.log(`  Bulunan Toplam ID : ${allIds.length}`);
     console.log(`  Şimdi İndirilecek : ${remaining.length}`);
 
     if (remaining.length === 0) {
-        updateTeamsJson(mackolikTeams, bilyonerDictionary); // Sadece isimleri güncelle ve çık
+        updateTeamsJson(mackolikTeams); 
         gitPush();
         return;
     }
 
-    console.log('\n[4/5] Logolar indiriliyor...\n');
+    console.log('\n[3/4] Logolar indiriliyor...\n');
     let ok = 0, skip = 0, fail = 0;
 
     for (let i = 0; i < remaining.length; i++) {
@@ -265,8 +217,7 @@ async function start() {
     fs.writeFileSync(PROGRESS_FILE, JSON.stringify([...processedIds]));
     console.log(`\n  Bilanço: ✓ ${ok} İndirildi  |  ⏭ ${skip} Zaten Vardı  |  ❌ ${fail} Hata`);
 
-    // İsim düzeltmeleri yapılarak JSON güncelleniyor
-    updateTeamsJson(mackolikTeams, bilyonerDictionary);
+    updateTeamsJson(mackolikTeams);
     gitPush();
 }
 
