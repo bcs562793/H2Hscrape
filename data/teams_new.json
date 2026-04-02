@@ -1,0 +1,1862 @@
+[
+  {
+    "mackolik_id": 1,
+    "name": "Galatasaray",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1.gif",
+    "logo_local": "logos/teams/1.gif"
+  },
+  {
+    "mackolik_id": 2,
+    "name": "Fenerbahçe",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2.gif",
+    "logo_local": "logos/teams/2.gif"
+  },
+  {
+    "mackolik_id": 3,
+    "name": "Beşiktaş",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/3.gif",
+    "logo_local": "logos/teams/3.gif"
+  },
+  {
+    "mackolik_id": 4,
+    "name": "Trabzonspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/4.gif",
+    "logo_local": "logos/teams/4.gif"
+  },
+  {
+    "mackolik_id": 5,
+    "name": "Altay",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/5.gif",
+    "logo_local": "logos/teams/5.gif"
+  },
+  {
+    "mackolik_id": 7,
+    "name": "Gençlerbirliği",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/7.gif",
+    "logo_local": "logos/teams/7.gif"
+  },
+  {
+    "mackolik_id": 8,
+    "name": "Samsunspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/8.gif",
+    "logo_local": "logos/teams/8.gif"
+  },
+  {
+    "mackolik_id": 9,
+    "name": "MKE Ankaragücü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9.gif",
+    "logo_local": "logos/teams/9.gif"
+  },
+  {
+    "mackolik_id": 10,
+    "name": "Denizlispor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/10.gif",
+    "logo_local": "logos/teams/10.gif"
+  },
+  {
+    "mackolik_id": 11,
+    "name": "İstanbulspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11.gif",
+    "logo_local": "logos/teams/11.gif"
+  },
+  {
+    "mackolik_id": 12,
+    "name": "Malatyaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12.gif",
+    "logo_local": "logos/teams/12.gif"
+  },
+  {
+    "mackolik_id": 13,
+    "name": "Bursaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/13.gif",
+    "logo_local": "logos/teams/13.gif"
+  },
+  {
+    "mackolik_id": 14,
+    "name": "Adanaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14.gif",
+    "logo_local": "logos/teams/14.gif"
+  },
+  {
+    "mackolik_id": 15,
+    "name": "Göztepe",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15.gif",
+    "logo_local": "logos/teams/15.gif"
+  },
+  {
+    "mackolik_id": 16,
+    "name": "Elazığspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/16.gif",
+    "logo_local": "logos/teams/16.gif"
+  },
+  {
+    "mackolik_id": 17,
+    "name": "Diyarbakırspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/17.gif",
+    "logo_local": "logos/teams/17.gif"
+  },
+  {
+    "mackolik_id": 18,
+    "name": "Kocaelispor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/18.gif",
+    "logo_local": "logos/teams/18.gif"
+  },
+  {
+    "mackolik_id": 25,
+    "name": "Fenerbahçe Beko",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/25.gif",
+    "logo_local": "logos/teams/25.gif"
+  },
+  {
+    "mackolik_id": 26,
+    "name": "Galatasaray MCT Technic",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/26.gif",
+    "logo_local": "logos/teams/26.gif"
+  },
+  {
+    "mackolik_id": 27,
+    "name": "Beşiktaş Gain",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/27.gif",
+    "logo_local": "logos/teams/27.gif"
+  },
+  {
+    "mackolik_id": 44,
+    "name": "Anadolu Efes",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/44.gif",
+    "logo_local": "logos/teams/44.gif"
+  },
+  {
+    "mackolik_id": 49,
+    "name": "Darüşşafaka Lassa",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/49.gif",
+    "logo_local": "logos/teams/49.gif"
+  },
+  {
+    "mackolik_id": 51,
+    "name": "TED Ankara Kolejliler",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/51.gif",
+    "logo_local": "logos/teams/51.gif"
+  },
+  {
+    "mackolik_id": 53,
+    "name": "Tofaş",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53.gif",
+    "logo_local": "logos/teams/53.gif"
+  },
+  {
+    "mackolik_id": 54,
+    "name": "Türk Telekom",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/54.gif",
+    "logo_local": "logos/teams/54.gif"
+  },
+  {
+    "mackolik_id": 55,
+    "name": "Karşıyaka",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/55.gif",
+    "logo_local": "logos/teams/55.gif"
+  },
+  {
+    "mackolik_id": 56,
+    "name": "Mersin Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/56.gif",
+    "logo_local": "logos/teams/56.gif"
+  },
+  {
+    "mackolik_id": 262,
+    "name": "Konya BBSK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/262.gif",
+    "logo_local": "logos/teams/262.gif"
+  },
+  {
+    "mackolik_id": 321,
+    "name": "Fenerbahçe Opet (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/321.gif",
+    "logo_local": "logos/teams/321.gif"
+  },
+  {
+    "mackolik_id": 323,
+    "name": "BOTAŞ (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/323.gif",
+    "logo_local": "logos/teams/323.gif"
+  },
+  {
+    "mackolik_id": 325,
+    "name": "Aslan Yol Burhaniye Bld (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/325.gif",
+    "logo_local": "logos/teams/325.gif"
+  },
+  {
+    "mackolik_id": 327,
+    "name": "GS Çağdaş F. (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/327.gif",
+    "logo_local": "logos/teams/327.gif"
+  },
+  {
+    "mackolik_id": 328,
+    "name": "Beşiktaş Boa (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/328.gif",
+    "logo_local": "logos/teams/328.gif"
+  },
+  {
+    "mackolik_id": 331,
+    "name": "Melikgazi Kayseri B. (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/331.gif",
+    "logo_local": "logos/teams/331.gif"
+  },
+  {
+    "mackolik_id": 443,
+    "name": "İzmirspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/443.gif",
+    "logo_local": "logos/teams/443.gif"
+  },
+  {
+    "mackolik_id": 444,
+    "name": "Sincan Belediye Ankaraspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/444.gif",
+    "logo_local": "logos/teams/444.gif"
+  },
+  {
+    "mackolik_id": 446,
+    "name": "Sivasspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/446.gif",
+    "logo_local": "logos/teams/446.gif"
+  },
+  {
+    "mackolik_id": 447,
+    "name": "Konyaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/447.gif",
+    "logo_local": "logos/teams/447.gif"
+  },
+  {
+    "mackolik_id": 448,
+    "name": "Çaykur Rizespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/448.gif",
+    "logo_local": "logos/teams/448.gif"
+  },
+  {
+    "mackolik_id": 449,
+    "name": "Manisaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/449.gif",
+    "logo_local": "logos/teams/449.gif"
+  },
+  {
+    "mackolik_id": 451,
+    "name": "Başakşehir FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/451.gif",
+    "logo_local": "logos/teams/451.gif"
+  },
+  {
+    "mackolik_id": 454,
+    "name": "Adana Demirspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/454.gif",
+    "logo_local": "logos/teams/454.gif"
+  },
+  {
+    "mackolik_id": 455,
+    "name": "Antalyaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/455.gif",
+    "logo_local": "logos/teams/455.gif"
+  },
+  {
+    "mackolik_id": 458,
+    "name": "Sakaryaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/458.gif",
+    "logo_local": "logos/teams/458.gif"
+  },
+  {
+    "mackolik_id": 532,
+    "name": "Kepezspor FAŞ",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/532.gif",
+    "logo_local": "logos/teams/532.gif"
+  },
+  {
+    "mackolik_id": 536,
+    "name": "Eskişehirspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/536.gif",
+    "logo_local": "logos/teams/536.gif"
+  },
+  {
+    "mackolik_id": 537,
+    "name": "Fatih Karagümrük",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/537.gif",
+    "logo_local": "logos/teams/537.gif"
+  },
+  {
+    "mackolik_id": 540,
+    "name": "İnegölspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/540.gif",
+    "logo_local": "logos/teams/540.gif"
+  },
+  {
+    "mackolik_id": 541,
+    "name": "Karşıyaka",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/541.gif",
+    "logo_local": "logos/teams/541.gif"
+  },
+  {
+    "mackolik_id": 543,
+    "name": "Kütahyaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/543.gif",
+    "logo_local": "logos/teams/543.gif"
+  },
+  {
+    "mackolik_id": 546,
+    "name": "Muğlaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/546.gif",
+    "logo_local": "logos/teams/546.gif"
+  },
+  {
+    "mackolik_id": 547,
+    "name": "Nazilli Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/547.gif",
+    "logo_local": "logos/teams/547.gif"
+  },
+  {
+    "mackolik_id": 552,
+    "name": "Ankara Demirspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/552.gif",
+    "logo_local": "logos/teams/552.gif"
+  },
+  {
+    "mackolik_id": 556,
+    "name": "Darıca Gençlerbirliği",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/556.gif",
+    "logo_local": "logos/teams/556.gif"
+  },
+  {
+    "mackolik_id": 557,
+    "name": "Eyüpspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/557.gif",
+    "logo_local": "logos/teams/557.gif"
+  },
+  {
+    "mackolik_id": 560,
+    "name": "Maltepespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/560.gif",
+    "logo_local": "logos/teams/560.gif"
+  },
+  {
+    "mackolik_id": 563,
+    "name": "Sarıyer",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/563.gif",
+    "logo_local": "logos/teams/563.gif"
+  },
+  {
+    "mackolik_id": 568,
+    "name": "Batman Petrolspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/568.gif",
+    "logo_local": "logos/teams/568.gif"
+  },
+  {
+    "mackolik_id": 570,
+    "name": "Kayserispor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/570.gif",
+    "logo_local": "logos/teams/570.gif"
+  },
+  {
+    "mackolik_id": 572,
+    "name": "Gaziantep FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/572.gif",
+    "logo_local": "logos/teams/572.gif"
+  },
+  {
+    "mackolik_id": 574,
+    "name": "Hatayspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/574.gif",
+    "logo_local": "logos/teams/574.gif"
+  },
+  {
+    "mackolik_id": 582,
+    "name": "Şanlıurfaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/582.gif",
+    "logo_local": "logos/teams/582.gif"
+  },
+  {
+    "mackolik_id": 589,
+    "name": "Bitlis Özgüzeldere",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/589.gif",
+    "logo_local": "logos/teams/589.gif"
+  },
+  {
+    "mackolik_id": 591,
+    "name": "Amed SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/591.gif",
+    "logo_local": "logos/teams/591.gif"
+  },
+  {
+    "mackolik_id": 594,
+    "name": "Kilis 1984 A.Ş.",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/594.gif",
+    "logo_local": "logos/teams/594.gif"
+  },
+  {
+    "mackolik_id": 600,
+    "name": "Van Spor FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/600.gif",
+    "logo_local": "logos/teams/600.gif"
+  },
+  {
+    "mackolik_id": 601,
+    "name": "Artvin Hopaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/601.gif",
+    "logo_local": "logos/teams/601.gif"
+  },
+  {
+    "mackolik_id": 602,
+    "name": "Çarşambaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/602.gif",
+    "logo_local": "logos/teams/602.gif"
+  },
+  {
+    "mackolik_id": 605,
+    "name": "Giresunspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/605.gif",
+    "logo_local": "logos/teams/605.gif"
+  },
+  {
+    "mackolik_id": 606,
+    "name": "Merzifonspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/606.gif",
+    "logo_local": "logos/teams/606.gif"
+  },
+  {
+    "mackolik_id": 609,
+    "name": "Pazarspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/609.gif",
+    "logo_local": "logos/teams/609.gif"
+  },
+  {
+    "mackolik_id": 611,
+    "name": "Sinopspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/611.gif",
+    "logo_local": "logos/teams/611.gif"
+  },
+  {
+    "mackolik_id": 619,
+    "name": "Alanyaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/619.gif",
+    "logo_local": "logos/teams/619.gif"
+  },
+  {
+    "mackolik_id": 621,
+    "name": "Boluspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/621.gif",
+    "logo_local": "logos/teams/621.gif"
+  },
+  {
+    "mackolik_id": 622,
+    "name": "Düzcespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/622.gif",
+    "logo_local": "logos/teams/622.gif"
+  },
+  {
+    "mackolik_id": 633,
+    "name": "Bandırmaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/633.gif",
+    "logo_local": "logos/teams/633.gif"
+  },
+  {
+    "mackolik_id": 634,
+    "name": "İzmir Çoruhlu FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/634.gif",
+    "logo_local": "logos/teams/634.gif"
+  },
+  {
+    "mackolik_id": 638,
+    "name": "Fethiyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/638.gif",
+    "logo_local": "logos/teams/638.gif"
+  },
+  {
+    "mackolik_id": 645,
+    "name": "Turgutluspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/645.gif",
+    "logo_local": "logos/teams/645.gif"
+  },
+  {
+    "mackolik_id": 646,
+    "name": "Yalovaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/646.gif",
+    "logo_local": "logos/teams/646.gif"
+  },
+  {
+    "mackolik_id": 652,
+    "name": "Edirnespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/652.gif",
+    "logo_local": "logos/teams/652.gif"
+  },
+  {
+    "mackolik_id": 654,
+    "name": "Gölcükspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/654.gif",
+    "logo_local": "logos/teams/654.gif"
+  },
+  {
+    "mackolik_id": 656,
+    "name": "Kasımpaşa",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/656.gif",
+    "logo_local": "logos/teams/656.gif"
+  },
+  {
+    "mackolik_id": 658,
+    "name": "Kırklarelispor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/658.gif",
+    "logo_local": "logos/teams/658.gif"
+  },
+  {
+    "mackolik_id": 659,
+    "name": "Pendikspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/659.gif",
+    "logo_local": "logos/teams/659.gif"
+  },
+  {
+    "mackolik_id": 660,
+    "name": "Tekirdağspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/660.gif",
+    "logo_local": "logos/teams/660.gif"
+  },
+  {
+    "mackolik_id": 663,
+    "name": "Final Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/663.gif",
+    "logo_local": "logos/teams/663.gif"
+  },
+  {
+    "mackolik_id": 667,
+    "name": "OGM Ormanspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/667.gif",
+    "logo_local": "logos/teams/667.gif"
+  },
+  {
+    "mackolik_id": 668,
+    "name": "iLab Basketbol",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/668.gif",
+    "logo_local": "logos/teams/668.gif"
+  },
+  {
+    "mackolik_id": 669,
+    "name": "Trabzonspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/669.gif",
+    "logo_local": "logos/teams/669.gif"
+  },
+  {
+    "mackolik_id": 673,
+    "name": "Akhisar Belediye Basketbol",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/673.gif",
+    "logo_local": "logos/teams/673.gif"
+  },
+  {
+    "mackolik_id": 677,
+    "name": "İTÜ Tam Finans",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/677.gif",
+    "logo_local": "logos/teams/677.gif"
+  },
+  {
+    "mackolik_id": 825,
+    "name": "Gaziantep Basketbol",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/825.gif",
+    "logo_local": "logos/teams/825.gif"
+  },
+  {
+    "mackolik_id": 1182,
+    "name": "Keçiörengücü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1182.gif",
+    "logo_local": "logos/teams/1182.gif"
+  },
+  {
+    "mackolik_id": 1187,
+    "name": "Altınordu",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1187.gif",
+    "logo_local": "logos/teams/1187.gif"
+  },
+  {
+    "mackolik_id": 1241,
+    "name": "Balıkesir BŞB",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1241.gif",
+    "logo_local": "logos/teams/1241.gif"
+  },
+  {
+    "mackolik_id": 1243,
+    "name": "Göztepe Sportif",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1243.gif",
+    "logo_local": "logos/teams/1243.gif"
+  },
+  {
+    "mackolik_id": 1644,
+    "name": "Nesibe Aydın (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1644.gif",
+    "logo_local": "logos/teams/1644.gif"
+  },
+  {
+    "mackolik_id": 1648,
+    "name": "Balıkesirspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1648.gif",
+    "logo_local": "logos/teams/1648.gif"
+  },
+  {
+    "mackolik_id": 1652,
+    "name": "Kahramanmaraşspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1652.gif",
+    "logo_local": "logos/teams/1652.gif"
+  },
+  {
+    "mackolik_id": 1655,
+    "name": "Vefa",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/1655.gif",
+    "logo_local": "logos/teams/1655.gif"
+  },
+  {
+    "mackolik_id": 2243,
+    "name": "Yalova VIP (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2243.gif",
+    "logo_local": "logos/teams/2243.gif"
+  },
+  {
+    "mackolik_id": 2248,
+    "name": "OGM Ormanspor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2248.gif",
+    "logo_local": "logos/teams/2248.gif"
+  },
+  {
+    "mackolik_id": 2314,
+    "name": "Yalovaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2314.gif",
+    "logo_local": "logos/teams/2314.gif"
+  },
+  {
+    "mackolik_id": 2333,
+    "name": "Glint Manisa Basket",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2333.gif",
+    "logo_local": "logos/teams/2333.gif"
+  },
+  {
+    "mackolik_id": 2367,
+    "name": "ONVO Büyükçekmece Basketbol",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2367.gif",
+    "logo_local": "logos/teams/2367.gif"
+  },
+  {
+    "mackolik_id": 2372,
+    "name": "Çorlu Belediyesi",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2372.gif",
+    "logo_local": "logos/teams/2372.gif"
+  },
+  {
+    "mackolik_id": 2613,
+    "name": "Karacabey Belediye Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2613.gif",
+    "logo_local": "logos/teams/2613.gif"
+  },
+  {
+    "mackolik_id": 2968,
+    "name": "ÇİMSA ÇBK Mersin (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/2968.gif",
+    "logo_local": "logos/teams/2968.gif"
+  },
+  {
+    "mackolik_id": 5940,
+    "name": "Türk Telekom Gelişim",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/5940.gif",
+    "logo_local": "logos/teams/5940.gif"
+  },
+  {
+    "mackolik_id": 6238,
+    "name": "Keçiören Bağlumspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/6238.gif",
+    "logo_local": "logos/teams/6238.gif"
+  },
+  {
+    "mackolik_id": 6241,
+    "name": "Büyükçekmece Tepecikspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/6241.gif",
+    "logo_local": "logos/teams/6241.gif"
+  },
+  {
+    "mackolik_id": 6861,
+    "name": "Yukatel Merkezefendi Bld.",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/6861.gif",
+    "logo_local": "logos/teams/6861.gif"
+  },
+  {
+    "mackolik_id": 6863,
+    "name": "MKE Ankaragücü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/6863.gif",
+    "logo_local": "logos/teams/6863.gif"
+  },
+  {
+    "mackolik_id": 7297,
+    "name": "Yeni Malatyaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/7297.gif",
+    "logo_local": "logos/teams/7297.gif"
+  },
+  {
+    "mackolik_id": 7298,
+    "name": "Bafra Bld.",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/7298.gif",
+    "logo_local": "logos/teams/7298.gif"
+  },
+  {
+    "mackolik_id": 7299,
+    "name": "Tavşanlı Linyitspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/7299.gif",
+    "logo_local": "logos/teams/7299.gif"
+  },
+  {
+    "mackolik_id": 7300,
+    "name": "Torbalıspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/7300.gif",
+    "logo_local": "logos/teams/7300.gif"
+  },
+  {
+    "mackolik_id": 7761,
+    "name": "Kocaeli BŞB Kağıtspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/7761.gif",
+    "logo_local": "logos/teams/7761.gif"
+  },
+  {
+    "mackolik_id": 7784,
+    "name": "Beylikdüzü Basket",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/7784.gif",
+    "logo_local": "logos/teams/7784.gif"
+  },
+  {
+    "mackolik_id": 7807,
+    "name": "Menemen FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/7807.gif",
+    "logo_local": "logos/teams/7807.gif"
+  },
+  {
+    "mackolik_id": 8824,
+    "name": "Ege Üni. Daçka",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/8824.gif",
+    "logo_local": "logos/teams/8824.gif"
+  },
+  {
+    "mackolik_id": 9632,
+    "name": "Erzurumspor FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9632.gif",
+    "logo_local": "logos/teams/9632.gif"
+  },
+  {
+    "mackolik_id": 9639,
+    "name": "Dersimspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9639.gif",
+    "logo_local": "logos/teams/9639.gif"
+  },
+  {
+    "mackolik_id": 9654,
+    "name": "1926 Bulancakspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9654.gif",
+    "logo_local": "logos/teams/9654.gif"
+  },
+  {
+    "mackolik_id": 9656,
+    "name": "Fatsa Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9656.gif",
+    "logo_local": "logos/teams/9656.gif"
+  },
+  {
+    "mackolik_id": 9657,
+    "name": "Ünye 1957 ",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9657.gif",
+    "logo_local": "logos/teams/9657.gif"
+  },
+  {
+    "mackolik_id": 9665,
+    "name": "Çorum FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9665.gif",
+    "logo_local": "logos/teams/9665.gif"
+  },
+  {
+    "mackolik_id": 9669,
+    "name": "Erbaaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9669.gif",
+    "logo_local": "logos/teams/9669.gif"
+  },
+  {
+    "mackolik_id": 9670,
+    "name": "Sorgun Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9670.gif",
+    "logo_local": "logos/teams/9670.gif"
+  },
+  {
+    "mackolik_id": 9675,
+    "name": "Yeşilyurt Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9675.gif",
+    "logo_local": "logos/teams/9675.gif"
+  },
+  {
+    "mackolik_id": 9677,
+    "name": "İskenderunspor A.Ş.",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9677.gif",
+    "logo_local": "logos/teams/9677.gif"
+  },
+  {
+    "mackolik_id": 9685,
+    "name": "Anamur Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9685.gif",
+    "logo_local": "logos/teams/9685.gif"
+  },
+  {
+    "mackolik_id": 9691,
+    "name": "Nevşehir Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9691.gif",
+    "logo_local": "logos/teams/9691.gif"
+  },
+  {
+    "mackolik_id": 9693,
+    "name": "Çankaya SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9693.gif",
+    "logo_local": "logos/teams/9693.gif"
+  },
+  {
+    "mackolik_id": 9703,
+    "name": "Bartınspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9703.gif",
+    "logo_local": "logos/teams/9703.gif"
+  },
+  {
+    "mackolik_id": 9711,
+    "name": "Kuşadasıspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9711.gif",
+    "logo_local": "logos/teams/9711.gif"
+  },
+  {
+    "mackolik_id": 9714,
+    "name": "Bucak Bld.Oğuzhanspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9714.gif",
+    "logo_local": "logos/teams/9714.gif"
+  },
+  {
+    "mackolik_id": 9724,
+    "name": "Uşak Spor A.Ş.",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9724.gif",
+    "logo_local": "logos/teams/9724.gif"
+  },
+  {
+    "mackolik_id": 9727,
+    "name": "Kestel Çilekspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9727.gif",
+    "logo_local": "logos/teams/9727.gif"
+  },
+  {
+    "mackolik_id": 9731,
+    "name": "Ayvalıkgücü Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9731.gif",
+    "logo_local": "logos/teams/9731.gif"
+  },
+  {
+    "mackolik_id": 9734,
+    "name": "Bigaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9734.gif",
+    "logo_local": "logos/teams/9734.gif"
+  },
+  {
+    "mackolik_id": 9739,
+    "name": "Sultanbeyli Bld.",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9739.gif",
+    "logo_local": "logos/teams/9739.gif"
+  },
+  {
+    "mackolik_id": 9740,
+    "name": "Ümraniyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9740.gif",
+    "logo_local": "logos/teams/9740.gif"
+  },
+  {
+    "mackolik_id": 9747,
+    "name": "Beylikdüzüspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9747.gif",
+    "logo_local": "logos/teams/9747.gif"
+  },
+  {
+    "mackolik_id": 9749,
+    "name": "Ergene Velimeşe",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/9749.gif",
+    "logo_local": "logos/teams/9749.gif"
+  },
+  {
+    "mackolik_id": 10714,
+    "name": "ABB Egospor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/10714.gif",
+    "logo_local": "logos/teams/10714.gif"
+  },
+  {
+    "mackolik_id": 10717,
+    "name": "Etimesgut Belediyesi",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/10717.gif",
+    "logo_local": "logos/teams/10717.gif"
+  },
+  {
+    "mackolik_id": 10720,
+    "name": "Watergarden HT",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/10720.gif",
+    "logo_local": "logos/teams/10720.gif"
+  },
+  {
+    "mackolik_id": 10721,
+    "name": "Harem Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/10721.gif",
+    "logo_local": "logos/teams/10721.gif"
+  },
+  {
+    "mackolik_id": 11141,
+    "name": "Turgutlu Belediyespor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11141.gif",
+    "logo_local": "logos/teams/11141.gif"
+  },
+  {
+    "mackolik_id": 11226,
+    "name": "Fenerbahçe Koleji",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11226.gif",
+    "logo_local": "logos/teams/11226.gif"
+  },
+  {
+    "mackolik_id": 11236,
+    "name": "Pizza Bulls CO Basket",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11236.gif",
+    "logo_local": "logos/teams/11236.gif"
+  },
+  {
+    "mackolik_id": 11237,
+    "name": "Adana Sertaş SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11237.gif",
+    "logo_local": "logos/teams/11237.gif"
+  },
+  {
+    "mackolik_id": 11934,
+    "name": "Kurtalanspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11934.gif",
+    "logo_local": "logos/teams/11934.gif"
+  },
+  {
+    "mackolik_id": 11936,
+    "name": "24Erzincanspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11936.gif",
+    "logo_local": "logos/teams/11936.gif"
+  },
+  {
+    "mackolik_id": 11941,
+    "name": "Bayburt Özel İdare Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11941.gif",
+    "logo_local": "logos/teams/11941.gif"
+  },
+  {
+    "mackolik_id": 11950,
+    "name": "Erciyes 38 FSK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11950.gif",
+    "logo_local": "logos/teams/11950.gif"
+  },
+  {
+    "mackolik_id": 11957,
+    "name": "52 Orduspor FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11957.gif",
+    "logo_local": "logos/teams/11957.gif"
+  },
+  {
+    "mackolik_id": 11960,
+    "name": "Karaman Futbol Kulübü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11960.gif",
+    "logo_local": "logos/teams/11960.gif"
+  },
+  {
+    "mackolik_id": 11982,
+    "name": "Parmos Otel Bandırma Bordo Sportif",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/11982.gif",
+    "logo_local": "logos/teams/11982.gif"
+  },
+  {
+    "mackolik_id": 12197,
+    "name": "Erdemli Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12197.gif",
+    "logo_local": "logos/teams/12197.gif"
+  },
+  {
+    "mackolik_id": 12201,
+    "name": "Bodrum FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12201.gif",
+    "logo_local": "logos/teams/12201.gif"
+  },
+  {
+    "mackolik_id": 12762,
+    "name": "Bodrum Basketbol (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12762.gif",
+    "logo_local": "logos/teams/12762.gif"
+  },
+  {
+    "mackolik_id": 12963,
+    "name": "Eskişehir 26 Basketbol",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12963.gif",
+    "logo_local": "logos/teams/12963.gif"
+  },
+  {
+    "mackolik_id": 12971,
+    "name": "Ödemiş Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12971.gif",
+    "logo_local": "logos/teams/12971.gif"
+  },
+  {
+    "mackolik_id": 12973,
+    "name": "Çayelispor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12973.gif",
+    "logo_local": "logos/teams/12973.gif"
+  },
+  {
+    "mackolik_id": 12977,
+    "name": "Kozan Spor FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12977.gif",
+    "logo_local": "logos/teams/12977.gif"
+  },
+  {
+    "mackolik_id": 12980,
+    "name": "Silivrispor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/12980.gif",
+    "logo_local": "logos/teams/12980.gif"
+  },
+  {
+    "mackolik_id": 13318,
+    "name": "Bandırma Etispor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/13318.gif",
+    "logo_local": "logos/teams/13318.gif"
+  },
+  {
+    "mackolik_id": 13325,
+    "name": "Söğütspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/13325.gif",
+    "logo_local": "logos/teams/13325.gif"
+  },
+  {
+    "mackolik_id": 13405,
+    "name": "Uzunköprüspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/13405.gif",
+    "logo_local": "logos/teams/13405.gif"
+  },
+  {
+    "mackolik_id": 13440,
+    "name": "Nizipspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/13440.gif",
+    "logo_local": "logos/teams/13440.gif"
+  },
+  {
+    "mackolik_id": 13502,
+    "name": "Konya Ereğlispor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/13502.gif",
+    "logo_local": "logos/teams/13502.gif"
+  },
+  {
+    "mackolik_id": 13921,
+    "name": "Seçil Kauçuk MBK (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/13921.gif",
+    "logo_local": "logos/teams/13921.gif"
+  },
+  {
+    "mackolik_id": 14189,
+    "name": "Kelkit Hürriyet SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14189.gif",
+    "logo_local": "logos/teams/14189.gif"
+  },
+  {
+    "mackolik_id": 14191,
+    "name": "Diyarbekir Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14191.gif",
+    "logo_local": "logos/teams/14191.gif"
+  },
+  {
+    "mackolik_id": 14194,
+    "name": "Hakkari Zapspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14194.gif",
+    "logo_local": "logos/teams/14194.gif"
+  },
+  {
+    "mackolik_id": 14195,
+    "name": "1461 Trabzon FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14195.gif",
+    "logo_local": "logos/teams/14195.gif"
+  },
+  {
+    "mackolik_id": 14198,
+    "name": "Amasyaspor Futbol Kulübü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14198.gif",
+    "logo_local": "logos/teams/14198.gif"
+  },
+  {
+    "mackolik_id": 14202,
+    "name": "Siverek Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14202.gif",
+    "logo_local": "logos/teams/14202.gif"
+  },
+  {
+    "mackolik_id": 14204,
+    "name": "Şehit Kamil Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14204.gif",
+    "logo_local": "logos/teams/14204.gif"
+  },
+  {
+    "mackolik_id": 14208,
+    "name": "Kırıkkale FK ",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14208.gif",
+    "logo_local": "logos/teams/14208.gif"
+  },
+  {
+    "mackolik_id": 14213,
+    "name": "Kumluca Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14213.gif",
+    "logo_local": "logos/teams/14213.gif"
+  },
+  {
+    "mackolik_id": 14214,
+    "name": "Manavgat Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14214.gif",
+    "logo_local": "logos/teams/14214.gif"
+  },
+  {
+    "mackolik_id": 14216,
+    "name": "Isparta 32 Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14216.gif",
+    "logo_local": "logos/teams/14216.gif"
+  },
+  {
+    "mackolik_id": 14224,
+    "name": "Manisa FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14224.gif",
+    "logo_local": "logos/teams/14224.gif"
+  },
+  {
+    "mackolik_id": 14238,
+    "name": "Zonguldakspor FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14238.gif",
+    "logo_local": "logos/teams/14238.gif"
+  },
+  {
+    "mackolik_id": 14257,
+    "name": "Karadeniz Ereğli Belediye",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14257.gif",
+    "logo_local": "logos/teams/14257.gif"
+  },
+  {
+    "mackolik_id": 14799,
+    "name": "Eskişehir Anadolu SF",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14799.gif",
+    "logo_local": "logos/teams/14799.gif"
+  },
+  {
+    "mackolik_id": 14803,
+    "name": "Kırşehir Futbol SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14803.gif",
+    "logo_local": "logos/teams/14803.gif"
+  },
+  {
+    "mackolik_id": 14806,
+    "name": "Suvermez Kapadokyaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14806.gif",
+    "logo_local": "logos/teams/14806.gif"
+  },
+  {
+    "mackolik_id": 14809,
+    "name": "Devrek Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14809.gif",
+    "logo_local": "logos/teams/14809.gif"
+  },
+  {
+    "mackolik_id": 14810,
+    "name": "68 Aksaray Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14810.gif",
+    "logo_local": "logos/teams/14810.gif"
+  },
+  {
+    "mackolik_id": 14815,
+    "name": "Osmaniyespor FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14815.gif",
+    "logo_local": "logos/teams/14815.gif"
+  },
+  {
+    "mackolik_id": 14817,
+    "name": "Somaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14817.gif",
+    "logo_local": "logos/teams/14817.gif"
+  },
+  {
+    "mackolik_id": 14891,
+    "name": "Aliağa Futbol A.Ş.",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14891.gif",
+    "logo_local": "logos/teams/14891.gif"
+  },
+  {
+    "mackolik_id": 14929,
+    "name": "Levent FSK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14929.gif",
+    "logo_local": "logos/teams/14929.gif"
+  },
+  {
+    "mackolik_id": 14932,
+    "name": "Keçiborlu Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/14932.gif",
+    "logo_local": "logos/teams/14932.gif"
+  },
+  {
+    "mackolik_id": 15019,
+    "name": "Yozgat Bld.Bozokspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15019.gif",
+    "logo_local": "logos/teams/15019.gif"
+  },
+  {
+    "mackolik_id": 15087,
+    "name": "Etimesgut Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15087.gif",
+    "logo_local": "logos/teams/15087.gif"
+  },
+  {
+    "mackolik_id": 15110,
+    "name": "Karamürselspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15110.gif",
+    "logo_local": "logos/teams/15110.gif"
+  },
+  {
+    "mackolik_id": 15146,
+    "name": "Silifke Belediye Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15146.gif",
+    "logo_local": "logos/teams/15146.gif"
+  },
+  {
+    "mackolik_id": 15502,
+    "name": "Mersin Gençlerbirliği (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15502.gif",
+    "logo_local": "logos/teams/15502.gif"
+  },
+  {
+    "mackolik_id": 15503,
+    "name": "Zorlu Koleji Samsun (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15503.gif",
+    "logo_local": "logos/teams/15503.gif"
+  },
+  {
+    "mackolik_id": 15504,
+    "name": "Adana Nova (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15504.gif",
+    "logo_local": "logos/teams/15504.gif"
+  },
+  {
+    "mackolik_id": 15505,
+    "name": "İstanbul Gençlik (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15505.gif",
+    "logo_local": "logos/teams/15505.gif"
+  },
+  {
+    "mackolik_id": 15587,
+    "name": "Bucaspor 1928 ",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15587.gif",
+    "logo_local": "logos/teams/15587.gif"
+  },
+  {
+    "mackolik_id": 15589,
+    "name": "Beykoz Anadolu",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15589.gif",
+    "logo_local": "logos/teams/15589.gif"
+  },
+  {
+    "mackolik_id": 15591,
+    "name": "Çatalcaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15591.gif",
+    "logo_local": "logos/teams/15591.gif"
+  },
+  {
+    "mackolik_id": 15727,
+    "name": "Darıca Basketbol Feneri (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/15727.gif",
+    "logo_local": "logos/teams/15727.gif"
+  },
+  {
+    "mackolik_id": 16210,
+    "name": "Fenerbahçe U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/16210.gif",
+    "logo_local": "logos/teams/16210.gif"
+  },
+  {
+    "mackolik_id": 16814,
+    "name": "Vangölü Sportif Faaliyetler",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/16814.gif",
+    "logo_local": "logos/teams/16814.gif"
+  },
+  {
+    "mackolik_id": 16829,
+    "name": "Karasuspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/16829.gif",
+    "logo_local": "logos/teams/16829.gif"
+  },
+  {
+    "mackolik_id": 16843,
+    "name": "İFA",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/16843.gif",
+    "logo_local": "logos/teams/16843.gif"
+  },
+  {
+    "mackolik_id": 16850,
+    "name": "Ladik Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/16850.gif",
+    "logo_local": "logos/teams/16850.gif"
+  },
+  {
+    "mackolik_id": 16976,
+    "name": "Arnavutköy Belediye",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/16976.gif",
+    "logo_local": "logos/teams/16976.gif"
+  },
+  {
+    "mackolik_id": 17254,
+    "name": "Beyoğlu Yeniçarşıspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/17254.gif",
+    "logo_local": "logos/teams/17254.gif"
+  },
+  {
+    "mackolik_id": 17386,
+    "name": "12 Bingölspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/17386.gif",
+    "logo_local": "logos/teams/17386.gif"
+  },
+  {
+    "mackolik_id": 17388,
+    "name": "Elazığ Yolspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/17388.gif",
+    "logo_local": "logos/teams/17388.gif"
+  },
+  {
+    "mackolik_id": 17389,
+    "name": "Karaköprü Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/17389.gif",
+    "logo_local": "logos/teams/17389.gif"
+  },
+  {
+    "mackolik_id": 18093,
+    "name": "Galatasaray U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/18093.gif",
+    "logo_local": "logos/teams/18093.gif"
+  },
+  {
+    "mackolik_id": 18777,
+    "name": "Akşehir Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/18777.gif",
+    "logo_local": "logos/teams/18777.gif"
+  },
+  {
+    "mackolik_id": 18807,
+    "name": "Adıyaman FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/18807.gif",
+    "logo_local": "logos/teams/18807.gif"
+  },
+  {
+    "mackolik_id": 19089,
+    "name": "Afyonspor Kulübü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/19089.gif",
+    "logo_local": "logos/teams/19089.gif"
+  },
+  {
+    "mackolik_id": 19220,
+    "name": "Esenler Erokspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/19220.gif",
+    "logo_local": "logos/teams/19220.gif"
+  },
+  {
+    "mackolik_id": 19316,
+    "name": "GMG Kastamonuspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/19316.gif",
+    "logo_local": "logos/teams/19316.gif"
+  },
+  {
+    "mackolik_id": 21490,
+    "name": "Serhat Ardahan",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/21490.gif",
+    "logo_local": "logos/teams/21490.gif"
+  },
+  {
+    "mackolik_id": 27151,
+    "name": "Trabzonspor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/27151.gif",
+    "logo_local": "logos/teams/27151.gif"
+  },
+  {
+    "mackolik_id": 32183,
+    "name": "Antalyaspor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32183.gif",
+    "logo_local": "logos/teams/32183.gif"
+  },
+  {
+    "mackolik_id": 32186,
+    "name": "Beşiktaş U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32186.gif",
+    "logo_local": "logos/teams/32186.gif"
+  },
+  {
+    "mackolik_id": 32204,
+    "name": "Gençlerbirliği U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32204.gif",
+    "logo_local": "logos/teams/32204.gif"
+  },
+  {
+    "mackolik_id": 32207,
+    "name": "Başakşehir U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32207.gif",
+    "logo_local": "logos/teams/32207.gif"
+  },
+  {
+    "mackolik_id": 32211,
+    "name": "Kasımpaşa U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32211.gif",
+    "logo_local": "logos/teams/32211.gif"
+  },
+  {
+    "mackolik_id": 32213,
+    "name": "Kayserispor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32213.gif",
+    "logo_local": "logos/teams/32213.gif"
+  },
+  {
+    "mackolik_id": 32216,
+    "name": "Konyaspor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32216.gif",
+    "logo_local": "logos/teams/32216.gif"
+  },
+  {
+    "mackolik_id": 32224,
+    "name": "Çaykur Rizespor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32224.gif",
+    "logo_local": "logos/teams/32224.gif"
+  },
+  {
+    "mackolik_id": 32226,
+    "name": "Samsunspor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32226.gif",
+    "logo_local": "logos/teams/32226.gif"
+  },
+  {
+    "mackolik_id": 32232,
+    "name": "Trabzonspor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/32232.gif",
+    "logo_local": "logos/teams/32232.gif"
+  },
+  {
+    "mackolik_id": 34900,
+    "name": "Çorluspor 1947",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/34900.gif",
+    "logo_local": "logos/teams/34900.gif"
+  },
+  {
+    "mackolik_id": 35104,
+    "name": "1207 Antalyaspor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/35104.gif",
+    "logo_local": "logos/teams/35104.gif"
+  },
+  {
+    "mackolik_id": 35107,
+    "name": "Fomget Gençlik (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/35107.gif",
+    "logo_local": "logos/teams/35107.gif"
+  },
+  {
+    "mackolik_id": 35108,
+    "name": "Hakkarigücü (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/35108.gif",
+    "logo_local": "logos/teams/35108.gif"
+  },
+  {
+    "mackolik_id": 35177,
+    "name": "Alanyaspor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/35177.gif",
+    "logo_local": "logos/teams/35177.gif"
+  },
+  {
+    "mackolik_id": 35328,
+    "name": "Beşiktaş (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/35328.gif",
+    "logo_local": "logos/teams/35328.gif"
+  },
+  {
+    "mackolik_id": 35329,
+    "name": "Fatih Vatanspor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/35329.gif",
+    "logo_local": "logos/teams/35329.gif"
+  },
+  {
+    "mackolik_id": 36199,
+    "name": "Amed Sportif (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/36199.gif",
+    "logo_local": "logos/teams/36199.gif"
+  },
+  {
+    "mackolik_id": 36224,
+    "name": "Güzide Gebze Spor Kulübü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/36224.gif",
+    "logo_local": "logos/teams/36224.gif"
+  },
+  {
+    "mackolik_id": 36263,
+    "name": "İnegöl Kafkas GK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/36263.gif",
+    "logo_local": "logos/teams/36263.gif"
+  },
+  {
+    "mackolik_id": 36321,
+    "name": "Ulubey Bld.",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/36321.gif",
+    "logo_local": "logos/teams/36321.gif"
+  },
+  {
+    "mackolik_id": 36325,
+    "name": "Serik Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/36325.gif",
+    "logo_local": "logos/teams/36325.gif"
+  },
+  {
+    "mackolik_id": 37866,
+    "name": "Yeniçağaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/37866.gif",
+    "logo_local": "logos/teams/37866.gif"
+  },
+  {
+    "mackolik_id": 37894,
+    "name": "Göztepe U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/37894.gif",
+    "logo_local": "logos/teams/37894.gif"
+  },
+  {
+    "mackolik_id": 38294,
+    "name": "Alanya 1221 FSK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/38294.gif",
+    "logo_local": "logos/teams/38294.gif"
+  },
+  {
+    "mackolik_id": 38446,
+    "name": "Yatağanspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/38446.gif",
+    "logo_local": "logos/teams/38446.gif"
+  },
+  {
+    "mackolik_id": 39115,
+    "name": "Beylerbeyi 1911 FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/39115.gif",
+    "logo_local": "logos/teams/39115.gif"
+  },
+  {
+    "mackolik_id": 39118,
+    "name": "K.Çekmece Sinopspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/39118.gif",
+    "logo_local": "logos/teams/39118.gif"
+  },
+  {
+    "mackolik_id": 39120,
+    "name": "Mardin 1969 Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/39120.gif",
+    "logo_local": "logos/teams/39120.gif"
+  },
+  {
+    "mackolik_id": 39242,
+    "name": "Bulvarspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/39242.gif",
+    "logo_local": "logos/teams/39242.gif"
+  },
+  {
+    "mackolik_id": 39510,
+    "name": "İzlog Pamukovaspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/39510.gif",
+    "logo_local": "logos/teams/39510.gif"
+  },
+  {
+    "mackolik_id": 39521,
+    "name": "1074 Çankırıspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/39521.gif",
+    "logo_local": "logos/teams/39521.gif"
+  },
+  {
+    "mackolik_id": 39690,
+    "name": "Ağrı 1970 Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/39690.gif",
+    "logo_local": "logos/teams/39690.gif"
+  },
+  {
+    "mackolik_id": 41679,
+    "name": "Fatih Karagümrükspor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/41679.gif",
+    "logo_local": "logos/teams/41679.gif"
+  },
+  {
+    "mackolik_id": 41719,
+    "name": "Eyüpspor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/41719.gif",
+    "logo_local": "logos/teams/41719.gif"
+  },
+  {
+    "mackolik_id": 41726,
+    "name": "Kocaelispor U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/41726.gif",
+    "logo_local": "logos/teams/41726.gif"
+  },
+  {
+    "mackolik_id": 41923,
+    "name": "Bursa Yıldırımspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/41923.gif",
+    "logo_local": "logos/teams/41923.gif"
+  },
+  {
+    "mackolik_id": 42011,
+    "name": "Kapaklıspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/42011.gif",
+    "logo_local": "logos/teams/42011.gif"
+  },
+  {
+    "mackolik_id": 42056,
+    "name": "Iğdır FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/42056.gif",
+    "logo_local": "logos/teams/42056.gif"
+  },
+  {
+    "mackolik_id": 42058,
+    "name": "Kars 36 Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/42058.gif",
+    "logo_local": "logos/teams/42058.gif"
+  },
+  {
+    "mackolik_id": 42064,
+    "name": "Yeni Mersin İdman Yurdu",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/42064.gif",
+    "logo_local": "logos/teams/42064.gif"
+  },
+  {
+    "mackolik_id": 42339,
+    "name": "Rize Özel İdarespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/42339.gif",
+    "logo_local": "logos/teams/42339.gif"
+  },
+  {
+    "mackolik_id": 42846,
+    "name": "Doğubayazıt FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/42846.gif",
+    "logo_local": "logos/teams/42846.gif"
+  },
+  {
+    "mackolik_id": 42861,
+    "name": "Polatlı 1926 Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/42861.gif",
+    "logo_local": "logos/teams/42861.gif"
+  },
+  {
+    "mackolik_id": 44227,
+    "name": "Gaziantep FK U19",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/44227.gif",
+    "logo_local": "logos/teams/44227.gif"
+  },
+  {
+    "mackolik_id": 45031,
+    "name": "ALG Spor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/45031.gif",
+    "logo_local": "logos/teams/45031.gif"
+  },
+  {
+    "mackolik_id": 46137,
+    "name": "Muş Spor Kulübü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/46137.gif",
+    "logo_local": "logos/teams/46137.gif"
+  },
+  {
+    "mackolik_id": 47950,
+    "name": "Hendek Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/47950.gif",
+    "logo_local": "logos/teams/47950.gif"
+  },
+  {
+    "mackolik_id": 47961,
+    "name": "Şanlıurfa BB",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/47961.gif",
+    "logo_local": "logos/teams/47961.gif"
+  },
+  {
+    "mackolik_id": 50377,
+    "name": "Kahta 02 Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/50377.gif",
+    "logo_local": "logos/teams/50377.gif"
+  },
+  {
+    "mackolik_id": 52849,
+    "name": "Orduspor 1967 SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/52849.gif",
+    "logo_local": "logos/teams/52849.gif"
+  },
+  {
+    "mackolik_id": 52850,
+    "name": "Sebat Gençlik SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/52850.gif",
+    "logo_local": "logos/teams/52850.gif"
+  },
+  {
+    "mackolik_id": 52853,
+    "name": "Mazıdağı Fosfat SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/52853.gif",
+    "logo_local": "logos/teams/52853.gif"
+  },
+  {
+    "mackolik_id": 52855,
+    "name": "Viranşehir Belediyespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/52855.gif",
+    "logo_local": "logos/teams/52855.gif"
+  },
+  {
+    "mackolik_id": 53325,
+    "name": "Şırnak Petrolspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53325.gif",
+    "logo_local": "logos/teams/53325.gif"
+  },
+  {
+    "mackolik_id": 53335,
+    "name": "Niğde Belediyesi Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53335.gif",
+    "logo_local": "logos/teams/53335.gif"
+  },
+  {
+    "mackolik_id": 53336,
+    "name": "Adana 01 Futbol Kulübü",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53336.gif",
+    "logo_local": "logos/teams/53336.gif"
+  },
+  {
+    "mackolik_id": 53343,
+    "name": "İnkılap FSK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53343.gif",
+    "logo_local": "logos/teams/53343.gif"
+  },
+  {
+    "mackolik_id": 53351,
+    "name": "Tire 2021 FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53351.gif",
+    "logo_local": "logos/teams/53351.gif"
+  },
+  {
+    "mackolik_id": 53352,
+    "name": "Bornova 1877",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53352.gif",
+    "logo_local": "logos/teams/53352.gif"
+  },
+  {
+    "mackolik_id": 53355,
+    "name": "Söke 1970 SK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53355.gif",
+    "logo_local": "logos/teams/53355.gif"
+  },
+  {
+    "mackolik_id": 53562,
+    "name": "Galatasaray (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53562.gif",
+    "logo_local": "logos/teams/53562.gif"
+  },
+  {
+    "mackolik_id": 53563,
+    "name": "Fenerbahçe (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/53563.gif",
+    "logo_local": "logos/teams/53563.gif"
+  },
+  {
+    "mackolik_id": 54599,
+    "name": "Karabük İdmanyurdu Spor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/54599.gif",
+    "logo_local": "logos/teams/54599.gif"
+  },
+  {
+    "mackolik_id": 54633,
+    "name": "Kahramanmaraş İstiklalspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/54633.gif",
+    "logo_local": "logos/teams/54633.gif"
+  },
+  {
+    "mackolik_id": 54635,
+    "name": "Tokat Bld",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/54635.gif",
+    "logo_local": "logos/teams/54635.gif"
+  },
+  {
+    "mackolik_id": 54639,
+    "name": "Bahçespor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/54639.gif",
+    "logo_local": "logos/teams/54639.gif"
+  },
+  {
+    "mackolik_id": 54647,
+    "name": "1966 Edremitspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/54647.gif",
+    "logo_local": "logos/teams/54647.gif"
+  },
+  {
+    "mackolik_id": 54648,
+    "name": "Tavşanlı Tepecikspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/54648.gif",
+    "logo_local": "logos/teams/54648.gif"
+  },
+  {
+    "mackolik_id": 54655,
+    "name": "Bursa Nilüfer FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/54655.gif",
+    "logo_local": "logos/teams/54655.gif"
+  },
+  {
+    "mackolik_id": 57956,
+    "name": "Beylerbeyispor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/57956.gif",
+    "logo_local": "logos/teams/57956.gif"
+  },
+  {
+    "mackolik_id": 57987,
+    "name": "Beykoz İshaklıspor",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/57987.gif",
+    "logo_local": "logos/teams/57987.gif"
+  },
+  {
+    "mackolik_id": 57988,
+    "name": "Küçükçekmece Sportif",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/57988.gif",
+    "logo_local": "logos/teams/57988.gif"
+  },
+  {
+    "mackolik_id": 58012,
+    "name": "Türk Metal 1963",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/58012.gif",
+    "logo_local": "logos/teams/58012.gif"
+  },
+  {
+    "mackolik_id": 58018,
+    "name": "Yalova FK",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/58018.gif",
+    "logo_local": "logos/teams/58018.gif"
+  },
+  {
+    "mackolik_id": 59882,
+    "name": "Ünye Gücü (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/59882.gif",
+    "logo_local": "logos/teams/59882.gif"
+  },
+  {
+    "mackolik_id": 60017,
+    "name": "Çekmeköy (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/60017.gif",
+    "logo_local": "logos/teams/60017.gif"
+  },
+  {
+    "mackolik_id": 60258,
+    "name": "Galata",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/60258.gif",
+    "logo_local": "logos/teams/60258.gif"
+  },
+  {
+    "mackolik_id": 60268,
+    "name": "Denizli İY Güreller",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/60268.gif",
+    "logo_local": "logos/teams/60268.gif"
+  },
+  {
+    "mackolik_id": 61804,
+    "name": "Giresun Sanayispor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/61804.gif",
+    "logo_local": "logos/teams/61804.gif"
+  },
+  {
+    "mackolik_id": 61805,
+    "name": "Yüksekova Belediyespor (K)",
+    "api_logo": "https://im.mackolik.com/img/logo/buyuk/61805.gif",
+    "logo_local": "logos/teams/61805.gif"
+  }
+]
