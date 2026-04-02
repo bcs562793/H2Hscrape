@@ -200,5 +200,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 4:
         build_combined(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
-        # Varsayılan yollar
-        build_combined('teams.json', 'teams_new.json', 'combined_teams.json')
+        # Klasör yapına göre yolları tam tanımla (örnek: data klasörü altındaysa)
+        build_combined('data/teams.json', 'data/teams_new.json', 'data/combined_teams.json')
