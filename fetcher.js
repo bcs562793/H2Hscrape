@@ -1,161 +1,71 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// Dosya yolları (Eğer dosyalar farklı klasördeyse burayı güncelleyebilirsin)
+const TEAMS_FILE = path.join(__dirname, 'teams.json');
+const TEAMS_NEW_FILE = path.join(__dirname, 'teams_new.json');
+const OUTPUT_FILE = path.join(__dirname, 'teams_updated.json');
 
-// ── Ayarlar ──────────────────────────────────────────────────────────────────
-const DATA_DIR   = path.join(__dirname, 'data');
-const TEAMS_FILE = path.join(DATA_DIR, 'teams_new.json'); 
-
-const MACKOLIK_LOGO_URL = (id) => `https://im.mackolik.com/img/logo/buyuk/${id}.gif`;
-const MACKOLIK_LIVEDATA = (date) => `https://vd.mackolik.com/livedata?date=${date}&s=1`;
-
-const DAYS_TO_SCAN = 90; // 90 Günlük Tarama
-
-// ── Yardımcı: Tarih üret ──────────────────────────────────────────────────
-function generateDates(dayCount) {
-    const dates = [];
-    const today = new Date();
-    for (let i = 0; i < dayCount; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        const day   = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year  = d.getFullYear();
-        dates.push(`${day}/${month}/${year}`);
-    }
-    return dates;
+// İsimleri eşleştirirken pürüzleri gidermek için temizleme fonksiyonu
+function normalizeName(name) {
+    if (!name) return '';
+    return name.toLowerCase().trim()
+        .replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ü/g, 'u')
+        .replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/ı/g, 'i').replace(/i̇/g, 'i')
+        .replace(/[^a-z0-9]/g, ''); // Sadece harf ve rakamları bırakır (boşluk ve noktaları siler)
 }
 
-// ── 1. Mackolik Livedata'dan 90 Günlük ID Topla ───────────────────────────
-async function collectTeamIdsFromMackolik() {
-    const dates = generateDates(DAYS_TO_SCAN);
-    const teamMap = {}; 
+function start() {
+    console.log('🔄 Takım birleştirme işlemi başlıyor...\n');
 
-    console.log(`\n[1/3] Mackolik API'den son ${DAYS_TO_SCAN} günün maçları taranıyor...`);
-
-    for (const date of dates) {
-        try {
-            const res = await fetch(MACKOLIK_LIVEDATA(date), {
-                headers: { 
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Referer': 'https://www.mackolik.com/'
-                },
-                signal: AbortSignal.timeout(10000)
-            });
-
-            if (!res.ok) { await sleep(1000); continue; }
-
-            const data = await res.json();
-            const matches = data?.m || [];
-
-            for (const match of matches) {
-                if (!match) continue;
-                
-                // DOĞRULANMIŞ KESİN FUTBOL FİLTRESİ: 23. indeks spor dalını belirtir (1 = Futbol)
-                if (match[23] !== 1) continue;
-
-                const homeId = match[1];
-                const homeName = match[2] || '';
-                const awayId = match[3];
-                const awayName = match[4] || '';
-
-                if (homeId) teamMap[homeId] = { id: homeId, name: homeName };
-                if (awayId) teamMap[awayId] = { id: awayId, name: awayName };
-            }
-
-            process.stdout.write(`\r  ${date} → Bulunan Dünya Geneli Futbol Takımı: ${Object.keys(teamMap).length}  `);
-            await sleep(300); 
-
-        } catch (err) {
-            // Sessizce atla
-        }
-    }
-    console.log(`\n  Mackolik'ten toplam ${Object.keys(teamMap).length} futbol takım ID'si toplandı.`);
-    return teamMap;
-}
-
-// ── 2. teams_new.json güncelle (İndirme yok, sadece URL kaydı) ────────────
-function updateTeamsJson(downloadedIds) {
-    console.log(`\n[2/3] JSON dosyası güncelleniyor...`);
-    let teams = [];
-    if (fs.existsSync(TEAMS_FILE)) {
-        const raw = JSON.parse(fs.readFileSync(TEAMS_FILE));
-        teams = Array.isArray(raw) ? raw : Object.values(raw);
-    }
-
-    let added = 0;
-
-    for (const [idStr, info] of Object.entries(downloadedIds)) {
-        const mackolikId = parseInt(idStr); // ID'yi integer yap
-        const logoUrl    = MACKOLIK_LOGO_URL(mackolikId);
-
-        // Hem yeni format (mackolik_id) hem eski format (id) için kontrol
-        const existing = teams.find(t => t.mackolik_id === mackolikId || t.id === mackolikId);
-        
-        if (existing) {
-            existing.name = info.name;
-            existing.api_logo = logoUrl;
-            existing.mackolik_id = mackolikId; // Garantilemek için ekle
-            delete existing.id; // Eski "id" anahtarını JSON'dan sil
-            delete existing.logo_local; // Artık lokal indirme yapmadığımız için bu anahtarı temizle
-        } else {
-            teams.push({
-                mackolik_id: mackolikId, 
-                name:       info.name,
-                api_logo:   logoUrl
-            });
-            added++;
-        }
-    }
-
-    fs.writeFileSync(TEAMS_FILE, JSON.stringify(teams, null, 2));
-    console.log(`  teams_new.json güncellendi → Toplam ${teams.length} takım (${added} yeni eklendi)`);
-}
-
-// ── 3. Git push ───────────────────────────────────────────────────────────
-function gitPush() {
-    console.log('\n[3/3] Değişiklikler GitHub\'a yükleniyor...');
-    try {
-        try { execSync('git config user.email "bot@mackoliksync.local"'); } catch(e){}
-        try { execSync('git config user.name "Data Bot"'); } catch(e){}
-
-        execSync('git add .');
-        try { execSync('git commit -m "Otomatik Bot: Takım logoları (URL) güncellendi"'); } 
-        catch { console.log('  Gönderilecek yeni değişiklik yok.'); return; }
-        
-        console.log('  GitHub\'dan güncel veriler çekiliyor (Pull)...');
-        execSync('git pull --rebase origin main');
-        console.log('  GitHub\'a gönderiliyor (Push)...');
-        execSync('git push origin main');
-        console.log('  ✅ GitHub\'a başarıyla yüklendi!');
-    } catch (err) {
-        console.error('  ❌ Git hatası:', err.message);
-    }
-}
-
-// ── Ana akış ─────────────────────────────────────────────────────────────
-async function start() {
-    console.log('═'.repeat(60));
-    console.log('  90 Günlük Mackolik URL Botu (Hızlı, İndirmesiz & 100% Futbol)');
-    console.log('═'.repeat(60));
-
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-
-    // 1. 90 Günlük ID ve İsimleri Çek
-    const mackolikTeams = await collectTeamIdsFromMackolik();
-    
-    if (Object.keys(mackolikTeams).length === 0) {
-        console.log('  Hiç takım bulunamadı, işlem sonlandırılıyor.');
+    // Dosyaları oku
+    if (!fs.existsSync(TEAMS_FILE) || !fs.existsSync(TEAMS_NEW_FILE)) {
+        console.error('❌ teams.json veya teams_new.json bulunamadı!');
         return;
     }
 
-    // 2. JSON'u Güncelle
-    updateTeamsJson(mackolikTeams);
+    const teams = JSON.parse(fs.readFileSync(TEAMS_FILE, 'utf8'));
+    const teamsNew = JSON.parse(fs.readFileSync(TEAMS_NEW_FILE, 'utf8'));
 
-    // 3. Git Push
-    gitPush();
+    let matchedCount = 0;
+    let addedCount = 0;
+
+    // teams_new.json içindeki her bir takımı dön
+    for (const newTeam of teamsNew) {
+        const normNewName = normalizeName(newTeam.name);
+
+        // teams.json içinde bu takımı bulmaya çalış
+        let existingTeam = teams.find(t => normalizeName(t.name) === normNewName);
+
+        if (existingTeam) {
+            // 1. DURUM: Takım eşleşti! 
+            // id değerini mackolik_id ile değiştir (ama key "id" olarak kalacak)
+            existingTeam.id = newTeam.mackolik_id;
+            existingTeam.api_logo = newTeam.api_logo; // Logoyu da mackolik logosuyla güncelle
+            matchedCount++;
+        } else {
+            // 2. DURUM: Takım teams.json'da yok!
+            // Yeni takım olarak ekle
+            teams.push({
+                id: newTeam.mackolik_id,  // mackolik_id değerini id anahtarına yaz
+                name: newTeam.name,
+                country: "", // teams_new'da ülke olmadığı için boş bırakıyoruz
+                api_logo: newTeam.api_logo
+            });
+            addedCount++;
+        }
+    }
+
+    // Güncellenmiş listeyi yeni bir dosyaya kaydet
+    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(teams, null, 2));
+
+    // Sonuç Raporu
+    console.log(`✅ İşlem tamamlandı! Sonuçlar ${OUTPUT_FILE} dosyasına kaydedildi.`);
+    console.log(`--------------------------------------------------`);
+    console.log(`Eski listede olup eşleşen ve ID'si güncellenen : ${matchedCount} takım`);
+    console.log(`Eski listede olmayıp YENİ eklenen              : ${addedCount} takım`);
+    console.log(`--------------------------------------------------`);
+    console.log(`Güncel teams.json toplam takım sayısı          : ${teams.length}`);
 }
 
-start().catch(console.error);
+start();
