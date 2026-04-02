@@ -1,357 +1,222 @@
 """
-scripts/team_logo_sync.py  (v5 — isim + ülke bazlı eşleştirme)
-───────────────────────────────────────────────────────────────
-Nasıl çalışır:
-  1. teams.json → {(norm_name, country): api_logo} haritası
-  2. live_matches → (team_id, team_name, league_country) listesi
-  3. Eşleştirme:
-       a. Tam isim + ülke eşleşmesi          → skor 100
-       b. Tam isim, ülke boş/bilinmiyor       → skor 95
-       c. Fuzzy isim (≥90) + ülke eşleşmesi   → skor fuzzy
-       d. Fuzzy isim (≥90), ülke yok          → skor fuzzy - 5 ceza
-  4. team_logo_mapping'e upsert
-  5. sync_live_match_logos + sync_future_match_logos RPC
+build_teams_json.py
+===================
+CSV dosyalarından (future_matches_rows.csv ve live_matches_rows.csv) tüm
+takımları okur, Mackolik CDN'inden logoları indirir ve data/teams.json'a yazar.
 
-Gerekli Actions secrets: SUPABASE_URL, SUPABASE_KEY
+Kullanım:
+    python build_teams_json.py
+
+Proje yapısı (H2Hscrape):
+    data/
+        teams.json          ← bu script tarafından oluşturulur / güncellenir
+        logos/              ← indirilen .gif dosyaları {team_id}.gif
+    future_matches_rows.csv
+    live_matches_rows.csv
+    build_teams_json.py     ← bu dosya
+
+Veri kaynakları:
+    live_matches_rows.csv  → kolonlar: home_team_id, home_team, home_logo,
+                                        away_team_id, away_team, away_logo
+    future_matches_rows.csv → kolon: data (JSON içinde teams.home / teams.away)
+
+Logo mantığı:
+    • logo URL'si im.mackolik.com içeriyorsa → indir, local path yaz
+    • logo URL'si api-sports.io içeriyorsa   → URL'yi olduğu gibi bırak
+    • live_matches logosu mackolik ise future'daki aynı takımın api-sports
+      logosunun üzerine yaz (mackolik her zaman öncelikli)
 """
 
-import logging
+import csv
+import json
 import os
 import re
-import sys
-import unicodedata
-from datetime import datetime, timezone
-
+import time
 import requests
-from rapidfuzz import fuzz, process as fuzz_process
-from supabase import Client, create_client
 
-GITHUB_URL   = "https://raw.githubusercontent.com/bcs562793/H2Hscrape/main/data/teams.json"
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+# ── Ayarlar ──────────────────────────────────────────────────────────────────
+BASE_DIR         = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR         = os.path.join(BASE_DIR, "data")
+LOGOS_DIR        = os.path.join(DATA_DIR, "logos")
+TEAMS_JSON       = os.path.join(DATA_DIR, "teams.json")
+LIVE_CSV         = os.path.join(BASE_DIR, "live_matches_rows.csv")
+FUTURE_CSV       = os.path.join(BASE_DIR, "future_matches_rows.csv")
 
-MIN_SCORE = 85   # Ülke filtresi yanlış eşleşmeleri azalttığı için 82'den 85'e çıktı
+MACKOLIK_LOGO    = "https://im.mackolik.com/img/logo/buyuk/{id}.gif"
+REQUEST_DELAY    = 0.15   # saniye - sunucuyu yormamak için
+REQUEST_TIMEOUT  = 8      # saniye
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-log = logging.getLogger(__name__)
-
-
-# ── Normalizasyon ─────────────────────────────────────────────────────────────
-
-def normalize(name: str) -> str:
-    TR = str.maketrans("şŞğĞüÜöÖçÇıİ", "sSgGuUoOcCiI")
-    s = unicodedata.normalize("NFKD", name.translate(TR)).encode("ascii", "ignore").decode().lower()
-    s = re.sub(r"[.\-_/'\\()]", " ", s)
-    # fc, sc, ac gibi prefix'leri sil
-    tokens = [t for t in s.split() if t not in {
-        "fc","sc","cf","ac","if","bk","sk","afc","bfc","cfc","sfc","rfc",
-        "cp","cd","sd","ud","rc","rcd",
-    }]
-    s = " ".join(tokens) if tokens else s.strip()
-    return re.sub(r"\s+", " ", s).strip()
-
-
-# ── Lig adından ülke çıkarma (live_matches.league_name Türkçe) ────────────────
-
-_LG_COUNTRY_MAP = {
-    "almanya":"Germany","ispanya":"Spain","italya":"Italy","fransa":"France",
-    "hollanda":"Netherlands","portekiz":"Portugal","brezilya":"Brazil",
-    "arjantin":"Argentina","turkiye":"Turkey","turk":"Turkey",
-    "belcika":"Belgium","isvicre":"Switzerland","avustralya":"Australia",
-    "japonya":"Japan","danimarka":"Denmark","norvec":"Norway","isvec":"Sweden",
-    "finlandiya":"Finland","polonya":"Poland","hirvatistan":"Croatia",
-    "slovenya":"Slovenia","slovakya":"Slovakia","cekya":"Czech Republic",
-    "macaristan":"Hungary","romanya":"Romania","bulgaristan":"Bulgaria",
-    "sirbistan":"Serbia","yunanistan":"Greece","avusturya":"Austria",
-    "iskocya":"Scotland","ingiltere":"England","galler":"Wales",
-    "kolombiya":"Colombia","meksika":"Mexico","sili":"Chile","misir":"Egypt",
-    "fas":"Morocco","cezayir":"Algeria","nijerya":"Nigeria","gana":"Ghana",
-    "abd":"USA","kanada":"Canada","arnavutluk":"Albania","karadag":"Montenegro",
-    "letonya":"Latvia","litvanya":"Lithuania","estonya":"Estonia",
-    "ukrayna":"Ukraine","rusya":"Russia","azerbaycan":"Azerbaijan",
-    "gurcistan":"Georgia","ermenistan":"Armenia","honduras":"Honduras",
-    "guatemala":"Guatemala","panama":"Panama","paraguay":"Paraguay",
-    "uruguay":"Uruguay","bolivya":"Bolivia","peru":"Peru","ekvador":"Ecuador",
-    "tanzanya":"Tanzania","kenya":"Kenya","tunus":"Tunisia","irak":"Iraq",
-    "suriye":"Syria","iran":"Iran","katar":"Qatar","hindistan":"India",
-    "cin":"China","endonezya":"Indonesia","tayland":"Thailand",
-    "malezya":"Malaysia","izlanda":"Iceland","kibris":"Cyprus",
-    "israil":"Israel","kazakistan":"Kazakhstan","ozbekistan":"Uzbekistan",
-    # İki kelimeli — birleşik anahtar
-    "guney_afrika":"South Africa","kuzey_irlanda":"Northern Ireland",
-    "kosta_rika":"Costa Rica","el_salvador":"El Salvador",
-    "suudi_arabistan":"Saudi Arabia","faroe_adalari":"Faroe Islands",
-    "guney_kore":"South Korea","yeni_zelanda":"New Zealand",
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    )
 }
 
-def _norm_for_country(s: str) -> str:
-    TR = str.maketrans("şŞğĞüÜöÖçÇıİ", "sSgGuUoOcCiI")
-    return unicodedata.normalize("NFKD", s.translate(TR)).encode("ascii","ignore").decode().lower()
-
-def extract_country(league_name: str) -> str:
-    if not league_name:
-        return ""
-    words = league_name.strip().split()
-    if not words:
-        return ""
-    # İki kelimeli deneme
-    if len(words) >= 2:
-        key2 = f"{_norm_for_country(words[0])}_{_norm_for_country(words[1])}"
-        if key2 in _LG_COUNTRY_MAP:
-            return _LG_COUNTRY_MAP[key2]
-    # Tek kelime
-    return _LG_COUNTRY_MAP.get(_norm_for_country(words[0]), "")
+os.makedirs(LOGOS_DIR, exist_ok=True)
 
 
-# ── GitHub ────────────────────────────────────────────────────────────────────
+# ── 1. CSV'lerden takım verisi topla ─────────────────────────────────────────
+def load_teams_from_csvs() -> dict[str, dict]:
+    """
+    Her iki CSV'yi okuyarak takım sözlüğü döndürür.
+    Yapı: { "team_id_str": {"id": int, "name": str, "logo": str} }
+    """
+    teams: dict[str, dict] = {}
 
-def fetch_teams() -> list[dict]:
-    log.info("teams.json çekiliyor...")
-    r = requests.get(GITHUB_URL, timeout=30)
-    r.raise_for_status()
-    teams = r.json()
-    log.info("%d takım yüklendi", len(teams))
+    # --- future_matches_rows.csv ---
+    if os.path.exists(FUTURE_CSV):
+        with open(FUTURE_CSV, encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                try:
+                    data = json.loads(row["data"])
+                    for side in ("home", "away"):
+                        t = data["teams"][side]
+                        tid = str(t["id"])
+                        teams[tid] = {
+                            "id":   t["id"],
+                            "name": t["name"],
+                            "logo": t.get("logo", ""),
+                        }
+                except Exception:
+                    pass
+        print(f"[CSV]  future_matches → {len(teams)} takım")
+    else:
+        print(f"[UYARI] {FUTURE_CSV} bulunamadı, atlanıyor.")
+
+    # --- live_matches_rows.csv ---
+    live_count = 0
+    if os.path.exists(LIVE_CSV):
+        with open(LIVE_CSV, encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                for id_col, name_col, logo_col in (
+                    ("home_team_id", "home_team", "home_logo"),
+                    ("away_team_id", "away_team", "away_logo"),
+                ):
+                    tid = row.get(id_col, "").strip()
+                    if not tid:
+                        continue
+                    logo = row.get(logo_col, "").strip()
+                    name = row.get(name_col, "").strip()
+
+                    # Mackolik logosu varsa future verisinin üstüne yaz
+                    if tid not in teams or "im.mackolik.com" in logo:
+                        teams[tid] = {"id": int(tid), "name": name, "logo": logo}
+                        live_count += 1
+
+        print(f"[CSV]  live_matches   → {live_count} takım eklendi/güncellendi")
+    else:
+        print(f"[UYARI] {LIVE_CSV} bulunamadı, atlanıyor.")
+
+    print(f"[CSV]  Toplam benzersiz takım: {len(teams)}")
     return teams
 
-def build_logo_index(teams: list[dict]) -> tuple[dict, list, list]:
+
+# ── 2. Var olan teams.json ile birleştir ─────────────────────────────────────
+def merge_with_existing(new_teams: dict[str, dict]) -> dict[str, dict]:
+    """Varsa mevcut teams.json'u yükler, yeni verilerle birleştirir."""
+    if not os.path.exists(TEAMS_JSON):
+        return new_teams
+
+    with open(TEAMS_JSON, encoding="utf-8") as f:
+        existing = json.load(f)
+
+    before = len(existing)
+    for tid, v in new_teams.items():
+        # Mackolik logolu yeni veri her zaman kazanır
+        if tid not in existing or "im.mackolik.com" in v.get("logo", ""):
+            existing[tid] = v
+
+    print(f"[JSON] Mevcut: {before} → Birleştirilmiş: {len(existing)} takım")
+    return existing
+
+
+# ── 3. Mackolik logolarını indir ─────────────────────────────────────────────
+def _mackolik_id_from_url(logo_url: str) -> str | None:
+    """Logo URL'sinden mackolik takım ID'sini çıkarır."""
+    m = re.search(r"/buyuk/(\d+)\.gif", logo_url)
+    return m.group(1) if m else None
+
+
+def download_logos(teams: dict[str, dict]) -> dict[str, dict]:
     """
-    Üç yapı döner:
-      exact_map : {(norm_name, country_lower): api_logo}  — tam eşleşme için
-      norm_names: normalize isim listesi (fuzzy için)
-      team_list : orijinal team dict listesi (norm_names ile aynı sıra)
+    im.mackolik.com'lu logo URL'si olan takımların .gif dosyasını indirir.
+    Logo indirildikten sonra 'logo_local' alanına yerel path kaydedilir.
     """
-    exact_map  : dict[tuple, str] = {}
-    norm_names : list[str]        = []
-    team_list  : list[dict]       = []
+    session = requests.Session()
+    session.headers.update(HEADERS)
 
-    for t in teams:
-        name    = t.get("name", "")
-        country = (t.get("country") or "").strip()
-        logo    = t.get("api_logo", "")
-        if not name or not logo:
-            continue
-        norm = normalize(name)
-        exact_map[(norm, country.lower())] = logo
-        exact_map[(norm, "")]              = logo   # ülkesiz fallback
-        norm_names.append(norm)
-        team_list.append(t)
+    mackolik_teams = {
+        tid: v for tid, v in teams.items()
+        if "im.mackolik.com" in v.get("logo", "")
+    }
 
-    log.info("Index: %d kayıt", len(team_list))
-    return exact_map, norm_names, team_list
+    print(f"\n[İNDİR] {len(mackolik_teams)} takım için Mackolik logosu indiriliyor…")
+    ok = skip = fail = 0
 
+    for tid, team in sorted(mackolik_teams.items(), key=lambda x: int(x[0])):
+        mac_id    = _mackolik_id_from_url(team["logo"]) or tid
+        logo_url  = MACKOLIK_LOGO.format(id=mac_id)
+        local_path = os.path.join(LOGOS_DIR, f"{mac_id}.gif")
+        rel_path   = f"data/logos/{mac_id}.gif"   # proje köküne göre relative
 
-# ── Supabase ──────────────────────────────────────────────────────────────────
-
-def get_live_teams(sb: Client) -> list[dict]:
-    """live_matches'ten benzersiz takımları ve lig adını döner."""
-    home = sb.table("live_matches").select("home_team_id, home_team, league_name").execute().data
-    away = sb.table("live_matches").select("away_team_id, away_team, league_name").execute().data
-
-    seen: dict[int, dict] = {}
-    for r in home:
-        tid = r["home_team_id"]
-        if tid and tid not in seen:
-            seen[tid] = {
-                "team_id":    tid,
-                "team_name":  r["home_team"],
-                "league_name": r.get("league_name", ""),
-            }
-    for r in away:
-        tid = r["away_team_id"]
-        if tid and tid not in seen:
-            seen[tid] = {
-                "team_id":    tid,
-                "team_name":  r["away_team"],
-                "league_name": r.get("league_name", ""),
-            }
-    rows = list(seen.values())
-    log.info("%d benzersiz takım", len(rows))
-    return rows
-
-
-def get_overrides(sb: Client) -> dict[int, dict]:
-    try:
-        data = sb.table("team_logo_override").select("*").execute().data
-        return {
-            r["live_team_id"]: {
-                "gh_team_name": r.get("gh_team_name"),
-                "api_logo":     r["api_logo"],
-            }
-            for r in data
-        }
-    except Exception:
-        log.warning("team_logo_override bulunamadı, atlanıyor.")
-        return {}
-
-
-# ── Eşleştirme ────────────────────────────────────────────────────────────────
-
-def build_mappings(
-    live_teams: list[dict],
-    exact_map:  dict,
-    norm_names: list[str],
-    team_list:  list[dict],
-    overrides:  dict[int, dict],
-) -> list[dict]:
-    now      = datetime.now(timezone.utc).isoformat()
-    results  = []
-    no_match = []
-
-    for lt in live_teams:
-        tid        = lt["team_id"]
-        name       = lt["team_name"] or ""
-        league_name = lt.get("league_name", "") or ""
-        country    = extract_country(league_name)   # "Germany", "Spain" vb.
-
-        # 1. Manuel override
-        if tid in overrides:
-            ov = overrides[tid]
-            results.append({
-                "live_team_id":   tid,
-                "live_team_name": name,
-                "gh_team_name":   ov["gh_team_name"],
-                "api_logo":       ov["api_logo"],
-                "match_score":    100.0,
-                "low_confidence": False,
-                "updated_at":     now,
-            })
+        # Zaten varsa atla
+        if os.path.exists(local_path) and os.path.getsize(local_path) > 100:
+            teams[tid]["logo_local"] = rel_path
+            skip += 1
             continue
 
-        q_norm = normalize(name)
-
-        # 2. Tam isim + ülke eşleşmesi
-        logo = exact_map.get((q_norm, country.lower()), "")
-        if logo:
-            results.append({
-                "live_team_id":   tid,
-                "live_team_name": name,
-                "gh_team_name":   name,
-                "api_logo":       logo,
-                "match_score":    100.0,
-                "low_confidence": False,
-                "updated_at":     now,
-            })
-            continue
-
-        # 3. Tam isim, ülke bilinmiyor
-        logo = exact_map.get((q_norm, ""), "")
-        if logo and not country:
-            results.append({
-                "live_team_id":   tid,
-                "live_team_name": name,
-                "gh_team_name":   name,
-                "api_logo":       logo,
-                "match_score":    95.0,
-                "low_confidence": False,
-                "updated_at":     now,
-            })
-            continue
-
-        # 4. Fuzzy eşleşme
-        match = fuzz_process.extractOne(
-            q_norm, norm_names,
-            scorer=fuzz.token_sort_ratio,
-            score_cutoff=0,
-        )
-        if match:
-            _, score, idx = match
-            best_team    = team_list[idx]
-            best_country = (best_team.get("country") or "").strip()
-            best_logo    = best_team.get("api_logo", "")
-            best_name    = best_team.get("name", "")
-
-            # Ülke eşleşmesi varsa bonus, yoksa ceza
-            if country and best_country:
-                country_ok = country.lower() == best_country.lower()
-                if not country_ok:
-                    score -= 15   # Ülke farklı → büyük ceza
-            
-            if score >= MIN_SCORE and best_logo:
-                results.append({
-                    "live_team_id":   tid,
-                    "live_team_name": name,
-                    "gh_team_name":   best_name,
-                    "api_logo":       best_logo,
-                    "match_score":    round(score, 1),
-                    "low_confidence": False,
-                    "updated_at":     now,
-                })
-                if score < 95:
-                    log.info("  🟡 %s → %s (%s) (%.0f)", name, best_name, country, score)
-                continue
-
-        # Eşleşme yok
-        results.append({
-            "live_team_id":   tid,
-            "live_team_name": name,
-            "gh_team_name":   None,
-            "api_logo":       "",
-            "match_score":    0.0,
-            "low_confidence": True,
-            "updated_at":     now,
-        })
-        no_match.append(f"  {name!r:35s} (ülke: {country or '?'})")
-
-    matched = sum(1 for r in results if not r["low_confidence"])
-    log.info("Eşleştirme: %d tam/yakın, %d eşleşmedi", matched, len(no_match))
-    if no_match:
-        log.warning("Eşleşmeyen %d takım:\n%s", len(no_match), "\n".join(sorted(no_match)))
-    return results
-
-
-# ── Supabase yazma ────────────────────────────────────────────────────────────
-
-BATCH = 500
-
-def upsert_mappings(sb: Client, results: list[dict]) -> None:
-    for i in range(0, len(results), BATCH):
-        chunk = results[i : i + BATCH]
         try:
-            sb.table("team_logo_mapping").upsert(chunk).execute()
-            log.info("Upsert: %d / %d", min(i + BATCH, len(results)), len(results))
+            r = session.get(logo_url, timeout=REQUEST_TIMEOUT)
+            if r.status_code == 200 and len(r.content) > 100:
+                with open(local_path, "wb") as f:
+                    f.write(r.content)
+                teams[tid]["logo_local"] = rel_path
+                print(f"  ✓ {mac_id:>8}  {team['name']}")
+                ok += 1
+            else:
+                print(f"  ✗ {mac_id:>8}  {team['name']}  [{r.status_code}]")
+                fail += 1
         except Exception as e:
-            if "PGRST205" in str(e) or "schema cache" in str(e):
-                log.error("team_logo_mapping tablosu bulunamadı!")
-                sys.exit(1)
-            raise
+            print(f"  ! {mac_id:>8}  {team['name']}  HATA: {e}")
+            fail += 1
 
-def update_logos(sb: Client) -> None:
-    sb.rpc("sync_live_match_logos", {}).execute()
-    log.info("live_matches logoları güncellendi")
-    sb.rpc("sync_future_match_logos", {}).execute()
-    log.info("future_matches.data logoları güncellendi")
+        time.sleep(REQUEST_DELAY)
+
+    print(f"\n[İNDİR] Tamamlandı → ✓ {ok} yeni  ⏭ {skip} zaten var  ✗ {fail} başarısız")
+    return teams
 
 
-# ── Ana akış ─────────────────────────────────────────────────────────────────
+# ── 4. teams.json yaz ────────────────────────────────────────────────────────
+def save_teams_json(teams: dict[str, dict]) -> None:
+    """Takım sözlüğünü data/teams.json'a yazar."""
+    with open(TEAMS_JSON, "w", encoding="utf-8") as f:
+        json.dump(teams, f, ensure_ascii=False, indent=2)
+    print(f"\n[JSON] {len(teams)} takım → {TEAMS_JSON}")
 
+
+# ── 5. Ana akış ──────────────────────────────────────────────────────────────
 def main() -> None:
-    log.info("=== team_logo_sync başladı (isim + ülke) ===")
+    print("=" * 60)
+    print("  H2Hscrape – Teams JSON & Logo Builder")
+    print("=" * 60, "\n")
 
-    try:
-        teams = fetch_teams()
-    except Exception as e:
-        log.error("GitHub hatası: %s", e)
-        sys.exit(1)
+    teams   = load_teams_from_csvs()
+    teams   = merge_with_existing(teams)
+    teams   = download_logos(teams)
+    save_teams_json(teams)
 
-    exact_map, norm_names, team_list = build_logo_index(teams)
-
-    try:
-        sb = create_client(SUPABASE_URL, SUPABASE_KEY)
-    except Exception as e:
-        log.error("Supabase bağlantı hatası: %s", e)
-        sys.exit(1)
-
-    live_teams = get_live_teams(sb)
-    overrides  = get_overrides(sb)
-    results    = build_mappings(live_teams, exact_map, norm_names, team_list, overrides)
-    upsert_mappings(sb, results)
-    update_logos(sb)
-
-    log.info("=== team_logo_sync tamamlandı ===")
+    # Özet
+    mac_logos   = sum(1 for v in teams.values() if "im.mackolik.com" in v.get("logo",""))
+    local_logos = sum(1 for v in teams.values() if v.get("logo_local"))
+    api_logos   = sum(1 for v in teams.values() if "api-sports.io" in v.get("logo",""))
+    print(f"\n{'─'*60}")
+    print(f"  Toplam takım     : {len(teams)}")
+    print(f"  Mackolik logolu  : {mac_logos}  (local: {local_logos})")
+    print(f"  API-Sports logolu: {api_logos}")
+    print(f"  Logolar klasörü  : {LOGOS_DIR}")
+    print(f"  Çıktı JSON       : {TEAMS_JSON}")
 
 
 if __name__ == "__main__":
