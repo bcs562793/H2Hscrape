@@ -11,7 +11,7 @@ const TEAMS_FILE   = path.join(DATA_DIR, 'teams_new.json');
 const PROGRESS_FILE = path.join(DATA_DIR, 'mackolik_processed_ids.json');
 
 const MACKOLIK_LOGO_URL = (id) => `https://im.mackolik.com/img/logo/buyuk/${id}.gif`;
-const MACKOLIK_LIVEDATA  = (date) => `http://goapi.mackolik.com/livedata?date=${date}`;
+const MACKOLIK_LIVEDATA  = (date) => `hvd.mackolik.com/livedata?date=${date}`;
 const MACKOLIK_TEAMS_API = 'https://arsiv.mackolik.com/Teams/Default.aspx';
 
 // Kaç günlük maç verisinden ID toplayalım (livedata API'den)
