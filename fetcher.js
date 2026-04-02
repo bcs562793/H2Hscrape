@@ -5,16 +5,15 @@ const { execSync } = require('child_process');
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ── Ayarlar ──────────────────────────────────────────────────────────────────
-const DATA_DIR     = path.join(__dirname, 'data');
-const LOGOS_DIR    = path.join(__dirname, 'logos', 'teams');
-const TEAMS_FILE   = path.join(DATA_DIR, 'teams_new.json');
+const DATA_DIR      = path.join(__dirname, 'data');
+const LOGOS_DIR     = path.join(__dirname, 'logos', 'teams');
+const TEAMS_FILE    = path.join(DATA_DIR, 'teams_new.json');
 const PROGRESS_FILE = path.join(DATA_DIR, 'mackolik_processed_ids.json');
 
-const MACKOLIK_LOGO_URL = (id) => `https://im.mackolik.com/img/logo/buyuk/${id}.gif`;
-const MACKOLIK_LIVEDATA  = (date) => `hvd.mackolik.com/livedata?date=${date}`;
-const MACKOLIK_TEAMS_API = 'https://arsiv.mackolik.com/Teams/Default.aspx';
+const MACKOLIK_LOGO_URL  = (id) => `https://im.mackolik.com/img/logo/buyuk/${id}.gif`;
+const MACKOLIK_LIVEDATA  = (date) => `https://vd.mackolik.com/livedata?date=${date}&s=1`;
 
-// Kaç günlük maç verisinden ID toplayalım (livedata API'den)
+// Kaç günlük maç verisinden ID toplayalım
 const DAYS_TO_SCAN = 90; // Son 90 güne ait maçlardan ID topla
 
 // ── Yardımcı: Tarih üret (DD/MM/YYYY) ───────────────────────────────────────
@@ -43,37 +42,48 @@ async function collectTeamIdsFromLivedata() {
         try {
             const url = MACKOLIK_LIVEDATA(date);
             const res = await fetch(url, {
-                headers: { 'User-Agent': 'Mozilla/5.0' },
-                signal: AbortSignal.timeout(8000)
+                headers: { 
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Referer': 'https://www.mackolik.com/',
+                    'Origin': 'https://www.mackolik.com'
+                },
+                signal: AbortSignal.timeout(10000)
             });
 
-            if (!res.ok) { await sleep(2000); continue; }
+            if (!res.ok) { await sleep(1000); continue; }
 
             const data = await res.json();
             const matches = data?.m || [];
 
             for (const match of matches) {
-                // match dizisi: [0]=maçID [1]=evAd [2]=depAd [3]=evID [4]=depID [23]=spor(1=futbol)
-                if (!match || match[23] !== 1) continue;
+                if (!match) continue;
 
-                const homeId = match[3];
-                const awayId = match[4];
-                const homeName = match[1] || '';
-                const awayName = match[2] || '';
+                // Futbol filtrelemesi: İçinde lig/turnuva verisi olan diziyi bul
+                const tournamentInfo = match.find(item => Array.isArray(item));
+                
+                // 8. indeks branşı belirtir (1=Futbol). Eğer futbol değilse bu maçı atla.
+                if (!tournamentInfo || tournamentInfo[8] !== 1) continue;
+
+                // Index 1: Ev Sahibi ID, Index 2: Ev Sahibi Adı
+                // Index 3: Deplasman ID, Index 4: Deplasman Adı
+                const homeId = match[1];
+                const homeName = match[2] || '';
+                const awayId = match[3];
+                const awayName = match[4] || '';
 
                 if (homeId) teamMap[homeId] = { id: homeId, name: homeName };
                 if (awayId) teamMap[awayId] = { id: awayId, name: awayName };
             }
 
-            process.stdout.write(`\r  ${date} → Toplam ID: ${Object.keys(teamMap).length}  `);
-            await sleep(300); // livedata API'ye nazik ol
+            process.stdout.write(`\r  ${date} → Toplam Bulunan ID: ${Object.keys(teamMap).length}  `);
+            await sleep(300); // API'ye nazik ol
 
         } catch (err) {
-            // Sessizce atla
+            // Hata olursa sessizce atla ve devam et
         }
     }
 
-    console.log(`\n  Livedata'dan toplam ${Object.keys(teamMap).length} benzersiz takım ID'si toplandı.`);
+    console.log(`\n  Livedata'dan toplam ${Object.keys(teamMap).length} benzersiz futbol takım ID'si toplandı.`);
     return teamMap;
 }
 
@@ -84,8 +94,8 @@ function collectTeamIdsFromTeamsJson() {
     const teams = JSON.parse(fs.readFileSync(TEAMS_FILE));
     const macTeams = {};
 
-    for (const [key, team] of Object.entries(teams)) {
-        const logo = team.logo || team.api_logo || '';
+    for (const team of (Array.isArray(teams) ? teams : Object.values(teams))) {
+        const logo = team.mackolik_logo || team.logo || team.api_logo || '';
         if (logo.includes('im.mackolik.com')) {
             // Logo URL'sinden ID'yi çek: /buyuk/12345.gif
             const match = logo.match(/\/buyuk\/(\d+)\.gif/);
@@ -96,7 +106,7 @@ function collectTeamIdsFromTeamsJson() {
         }
     }
 
-    console.log(`  teams.json'dan ${Object.keys(macTeams).length} Mackolik ID'li takım bulundu.`);
+    console.log(`  teams_new.json'dan ${Object.keys(macTeams).length} Mackolik ID'li takım bulundu.`);
     return macTeams;
 }
 
@@ -112,7 +122,7 @@ async function downloadLogo(teamId, teamName) {
 
     try {
         const res = await fetch(logoUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
             signal: AbortSignal.timeout(8000)
         });
 
@@ -150,7 +160,7 @@ function updateTeamsJson(downloadedIds) {
 
         const existing = teams.find(t => t.id === id);
         if (existing) {
-            // Sadece logo alanını güncelle, diğer verileri koru
+            // Sadece logo alanlarını güncelle
             existing.mackolik_logo = logoUrl;
             existing.logo_local    = localGif;
         } else {
@@ -164,15 +174,18 @@ function updateTeamsJson(downloadedIds) {
         }
     }
 
-    // Hem array hem object formatına uygun kaydet (orijinal format korunur)
     fs.writeFileSync(TEAMS_FILE, JSON.stringify(teams, null, 2));
-    console.log(`  teams.json güncellendi → ${teams.length} takım (${added} yeni eklendi)`);
+    console.log(`  teams_new.json güncellendi → ${teams.length} takım (${added} yeni takım listeye eklendi)`);
 }
 
 // ── 5. Git push ───────────────────────────────────────────────────────────
 function gitPush() {
     console.log('\n[4/4] Değişiklikler GitHub\'a yükleniyor...');
     try {
+        // Sunucu/Action hatasını çözmek için geçici kimlik tanımlaması
+        try { execSync('git config user.email "bot@mackoliksync.local"'); } catch(e){}
+        try { execSync('git config user.name "Mackolik Bot"'); } catch(e){}
+
         execSync('git add .');
         try {
             execSync('git commit -m "Otomatik Bot: Mackolik takım logoları güncellendi"');
@@ -182,6 +195,7 @@ function gitPush() {
         }
         console.log('  GitHub\'dan güncel veriler çekiliyor (Pull)...');
         execSync('git pull --rebase origin main');
+        
         console.log('  GitHub\'a gönderiliyor (Push)...');
         execSync('git push origin main');
         console.log('  ✅ GitHub\'a başarıyla yüklendi!');
@@ -193,7 +207,7 @@ function gitPush() {
 // ── Ana akış ─────────────────────────────────────────────────────────────
 async function start() {
     console.log('═'.repeat(60));
-    console.log('  Mackolik Logo İndirici');
+    console.log('  Mackolik Futbol Logo İndirici (Son 90 Gün)');
     console.log('═'.repeat(60));
 
     // Klasörleri oluştur
@@ -204,12 +218,12 @@ async function start() {
     let processedIds = new Set();
     if (fs.existsSync(PROGRESS_FILE)) {
         processedIds = new Set(JSON.parse(fs.readFileSync(PROGRESS_FILE)));
-        console.log(`  Daha önce işlenmiş: ${processedIds.size} ID\n`);
+        console.log(`  Daha önce işlenmiş: ${processedIds.size} takım ID'si\n`);
     }
 
     // ── ID toplama ──────────────────────────────────────────────────────
-    const fromJson     = collectTeamIdsFromTeamsJson();       // teams.json'dan
-    const fromLivedata = await collectTeamIdsFromLivedata();  // livedata API'den
+    const fromJson     = collectTeamIdsFromTeamsJson();       // JSON'dan
+    const fromLivedata = await collectTeamIdsFromLivedata();  // API'den
 
     // Birleştir
     const allTeams = { ...fromLivedata, ...fromJson };
@@ -218,13 +232,13 @@ async function start() {
     // Henüz işlenmemiş ID'ler
     const remaining = allIds.filter(id => !processedIds.has(id));
 
-    console.log(`\n[2/4] İndirilecek logo:`);
-    console.log(`  Toplam benzersiz ID : ${allIds.length}`);
-    console.log(`  Zaten işlenmiş      : ${processedIds.size}`);
-    console.log(`  Bu oturumda         : ${remaining.length}`);
+    console.log(`\n[2/4] İşlem Özeti:`);
+    console.log(`  Bulunan Toplam ID : ${allIds.length}`);
+    console.log(`  Zaten İşlenmiş    : ${processedIds.size}`);
+    console.log(`  Şimdi İndirilecek : ${remaining.length}`);
 
     if (remaining.length === 0) {
-        console.log('\n  Tebrikler! Tüm Mackolik logoları zaten indirilmiş.');
+        console.log('\n  Tebrikler! Tüm logolar zaten indirilmiş.');
         gitPush();
         return;
     }
@@ -251,21 +265,21 @@ async function start() {
             downloadedMap[id] = info;
         } else {
             fail++;
-            processedIds.add(id); // Olmayan ID'yi de işlenmiş say, tekrar deneme
+            processedIds.add(id); // Hatalı ID'yi de ekle ki bir dahaki sefer boşuna takılmasın
         }
 
-        // Her 50 ID'de bir progress kaydet
+        // Her 50 logoda bir state (durum) kaydet
         if ((i + 1) % 50 === 0) {
             fs.writeFileSync(PROGRESS_FILE, JSON.stringify([...processedIds]));
         }
 
-        await sleep(150); // Rate limit
+        await sleep(150); // Sunucu engelini aşmak için bekleme (Rate limit)
     }
 
-    // Son kez kaydet
+    // Son durumu kaydet
     fs.writeFileSync(PROGRESS_FILE, JSON.stringify([...processedIds]));
 
-    console.log(`\n  ✓ ${ok} yeni  ⏭ ${skip} zaten vardı  ✗ ${fail} bulunamadı`);
+    console.log(`\n  Bilanço: ✓ ${ok} İndirildi  |  ⏭ ${skip} Zaten Vardı  |  ❌ ${fail} Bulunamadı/Hata`);
 
     // ── teams.json güncelle ────────────────────────────────────────────
     updateTeamsJson(downloadedMap);
