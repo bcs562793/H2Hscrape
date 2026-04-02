@@ -1,10 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 
-// Dosya yolları (Eğer dosyalar farklı klasördeyse burayı güncelleyebilirsin)
-const TEAMS_FILE = path.join(__dirname, 'teams.json');
-const TEAMS_NEW_FILE = path.join(__dirname, 'teams_new.json');
-const OUTPUT_FILE = path.join(__dirname, 'teams_updated.json');
+// GitHub Actions ortamında çalışma dizinini (workspace) kök olarak alıyoruz
+const WORKSPACE = process.env.GITHUB_WORKSPACE || process.cwd();
+const DATA_DIR = path.join(WORKSPACE, 'data');
+
+// Dosya yolları
+const TEAMS_FILE = path.join(DATA_DIR, 'teams.json');
+const TEAMS_NEW_FILE = path.join(DATA_DIR, 'teams_new.json');
+const OUTPUT_FILE = path.join(DATA_DIR, 'teams_updated.json');
 
 // İsimleri eşleştirirken pürüzleri gidermek için temizleme fonksiyonu
 function normalizeName(name) {
@@ -17,10 +21,13 @@ function normalizeName(name) {
 
 function start() {
     console.log('🔄 Takım birleştirme işlemi başlıyor...\n');
+    console.log(`Aranan dizin: ${DATA_DIR}`);
 
     // Dosyaları oku
     if (!fs.existsSync(TEAMS_FILE) || !fs.existsSync(TEAMS_NEW_FILE)) {
         console.error('❌ teams.json veya teams_new.json bulunamadı!');
+        console.log(`Beklenen teams.json yolu: ${TEAMS_FILE}`);
+        console.log(`Beklenen teams_new.json yolu: ${TEAMS_NEW_FILE}`);
         return;
     }
 
