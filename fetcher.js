@@ -52,11 +52,9 @@ async function collectTeamIdsFromMackolik() {
 
             for (const match of matches) {
                 if (!match) continue;
-
-                const tournamentInfo = match.find(item => Array.isArray(item));
                 
-                // DOĞRU FUTBOL FİLTRESİ: 8. indeks spor dalını belirtir (1 = Futbol)
-                if (!tournamentInfo || tournamentInfo[8] !== 1) continue;
+                // DOĞRULANMIŞ KESİN FUTBOL FİLTRESİ: 23. indeks spor dalını belirtir (1 = Futbol)
+                if (match[23] !== 1) continue;
 
                 const homeId = match[1];
                 const homeName = match[2] || '';
@@ -140,7 +138,7 @@ function gitPush() {
 // ── Ana akış ─────────────────────────────────────────────────────────────
 async function start() {
     console.log('═'.repeat(60));
-    console.log('  90 Günlük Mackolik URL Botu (Hızlı & İndirmesiz)');
+    console.log('  90 Günlük Mackolik URL Botu (Hızlı, İndirmesiz & 100% Futbol)');
     console.log('═'.repeat(60));
 
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
