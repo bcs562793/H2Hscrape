@@ -1,7 +1,9 @@
 name: Team Logo Sync
 
+on:
   workflow_dispatch:
-
+  
+  
 jobs:
   sync:
     name: Sync team logos
