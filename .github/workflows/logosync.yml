@@ -1,8 +1,5 @@
 name: Team Logo Sync
 
-on:
-  schedule:
-    - cron: "0 3 * * *"   # Her gün TR 06:00 = UTC 03:00
   workflow_dispatch:
 
 jobs:
