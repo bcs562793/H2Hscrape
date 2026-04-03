@@ -1,227 +1,296 @@
 """
-build_teams_json.py
-===================
-CSV dosyalarından (future_matches_rows.csv ve live_matches_rows.csv) tüm
-takımları okur, Mackolik CDN'inden logoları indirir ve data/teams_new.json'a yazar.
+update_live_logos.py
+====================
+live_matches tablosundaki home_logo ve away_logo alanlarını
+data/teams_updated.json'daki api_logo URL'siyle günceller.
+
+Eşleştirme: önce team_id ile direkt, bulunamazsa odds-update.js v6
+ile aynı tokenSim + TEAM_ALIASES fuzzy eşleştirme.
 
 Kullanım:
-    python build_teams_json.py
+    SUPABASE_URL=... SUPABASE_KEY=... python update_live_logos.py
 
 Proje yapısı (H2Hscrape):
     data/
-        teams.json          ← mevcut/eski verileri okumak için
-        teams_new.json      ← YENİ ÇIKTI DOSYASI (bu script oluşturur)
-        logos/              ← indirilen .gif dosyaları {team_id}.gif
-    future_matches_rows.csv
-    live_matches_rows.csv
-    build_teams_json.py     ← bu dosya
-
-Veri kaynakları:
-    live_matches_rows.csv  → kolonlar: home_team_id, home_team, home_logo,
-                                        away_team_id, away_team, away_logo
-    future_matches_rows.csv → kolon: data (JSON içinde teams.home / teams.away)
-
-Logo mantığı:
-    • logo URL'si im.mackolik.com içeriyorsa → indir, local path yaz
-    • logo URL'si api-sports.io içeriyorsa   → URL'yi olduğu gibi bırak
-    • live_matches logosu mackolik ise future'daki aynı takımın api-sports
-      logosunun üzerine yaz (mackolik her zaman öncelikli)
+        teams_updated.json   ← [{id, name, country, api_logo}]
+    update_live_logos.py     ← bu dosya
 """
 
-import csv
 import json
 import os
 import re
-import time
-import requests
+import sys
 
-# ── Ayarlar ──────────────────────────────────────────────────────────────────
-BASE_DIR         = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR         = os.path.join(BASE_DIR, "data")
-LOGOS_DIR        = os.path.join(DATA_DIR, "logos")
+from supabase import create_client
 
-# Okunacak eski dosya ve YAZILACAK yeni dosya yolları
-TEAMS_JSON       = os.path.join(DATA_DIR, "teams.json")
-TEAMS_OUT_JSON   = os.path.join(DATA_DIR, "teams_new.json")
+# ── Supabase bağlantısı ──────────────────────────────────────────────
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("[HATA] SUPABASE_URL ve SUPABASE_KEY env değişkenleri gerekli")
+    sys.exit(1)
 
-LIVE_CSV         = os.path.join(BASE_DIR, "live_matches_rows.csv")
-FUTURE_CSV       = os.path.join(BASE_DIR, "future_matches_rows.csv")
+sb = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-MACKOLIK_LOGO    = "https://im.mackolik.com/img/logo/buyuk/{id}.gif"
-REQUEST_DELAY    = 0.15   # saniye - sunucuyu yormamak için
-REQUEST_TIMEOUT  = 8      # saniye
+# ── teams_updated.json yolu ──────────────────────────────────────────
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+TEAMS_JSON = os.path.join(BASE_DIR, "data", "teams_updated.json")
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    )
+# ── Eşik değerleri (odds-update.js v6 ile aynı) ─────────────────────
+THRESHOLD    = 0.40
+MIN_PER_TEAM = 0.25
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# EŞLEŞTIRME ARAÇLARI  (odds-update.js v6 Python karşılığı)
+# ═══════════════════════════════════════════════════════════════════════
+
+def norm(s: str) -> str:
+    s = (s or "").lower()
+    for old, new in [("ğ","g"),("ü","u"),("ş","s"),("ı","i"),("ö","o"),("ç","c")]:
+        s = s.replace(old, new)
+    s = re.sub(r"[^a-z0-9]", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+TEAM_ALIASES: dict[str, str] = {
+    "seattle s"                  : "seattle sounders",
+    "st louis"                   : "s louis city",
+    "s san jose"                 : "deportivo saprissa",
+    "cs cartagines"              : "cartagines",
+    "gabala"                     : "kabala",
+    "panaitolikos"               : "paneitolikos",
+    "panserraikos"               : "panseraikos",
+    "rz pellets wac"             : "wolfsberger",
+    "tsv egger glas hartberg"    : "hartberg",
+    "fc red bull salzburg"       : "salzburg",
+    "ksv 1919"                   : "kapfenberger sv",
+    "sk rapid ii"                : "r wien amt",
+    "sw bregenz"                 : "schwarz weiss b",
+    "sk austria klagenfurt"      : "klagenfurt",
+    "skn st polten"              : "st polten",
+    "skn st pölten"              : "st polten",
+    "fc hertha wels"             : "wsc hertha",
+    "b68 toftir"                 : "tofta itrottarfelag b68",
+    "ca ferrocarril midland"     : "f midland",
+    "gimnasia y esgrima de men"  : "gimnasia y",
+    "estudiantes rio cuarto"     : "e rio cuarto",
+    "ind medellin"               : "ind medellin",
+    "america de cali"            : "america cali",
+    "napredak"                   : "fk napredak kru",
+    "tsc backa to"               : "tsc backa t",
+    "d makhachkala"              : "dyn makhachkala",
+    "rfc liege"                  : "rfc liege",
+    "raal la louviere"           : "raal la louviere",
+    "racing genk b"              : "j krc genk u23",
+    "h w welders"                : "harland wolff w",
+    "adelaide united fc k"       : "adelaide utd k",
+    "canberra utd k"             : "canberra utd k",
+    "brisbane roar fc k"         : "brisbane r k",
+    "kyzylzhar"                  : "kyzyl zhar sk",
+    "d batumi"                   : "dinamo b",
+    "algeciras cf"               : "algeciras",
+    "ibiza"                      : "i eivissa",
+    "gubbio"                     : "as gubbio 1910",
+    "pineto"                     : "asd pineto calcio",
+    "mont tuscia"                : "monterosi t",
+    "ssd casarano calcio"        : "casarano",
+    "palermo"                    : "us palermo",
+    "avellino"                   : "as avellino 1912",
+    "utdofmanch"                 : "utd of manch",
+    "sg sonnenhof grossaspach"   : "grossaspach",
+    "chengdu"                    : "chengdu ron",
+    "qingdao y i"                : "qingdao yth is",
+    "bragantino"                 : "rb bragantino",
+    "palmeiras"                  : "palmeiras sp",
+    "gremio"                     : "gremio p",
+    "baltika"                    : "b kaliningrad",
+    "velez"                      : "v sarsfield",
+    "s shenhua"                  : "shanghai s",
+    "tianjin jinmen"             : "tianjin jin",
+    "g birligi"                  : "genclerbirligi",
+    "1 fc slovacko"              : "slovacko",
+    "jagiellonia"                : "j bialystok",
+    "ilves"                      : "tampereen i",
+    "auvergne"                   : "le puy foot 43",
+    "juventud"                   : "ca juventud de las piedras",
+    "akademisk bo"               : "ab gladsaxe",
+    "lusitania de lourosa"       : "lusitania",
+    "stade nyonnais"             : "std nyonnis",
+    "fc zurich"                  : "zurih",
+    "cordoba cf"                 : "cordoba",
+    "deportivo"                  : "dep la coruna",
+    "masr"                       : "zed",
+    "future fc"                  : "modern sport club",
+    "new york rb"                : "ny red bulls",
+    "the new saints"             : "tns",
+    "vancouver"                  : "v whitecaps",
+    "fc hradec kralove"          : "h kralove",
+    "fc midtjylland"             : "midtjylland",
+    "sonderjyske"                : "sonderjyske",
+    "pacos de ferreira"          : "p ferreira",
+    "mingachevir"                : "mingecevir",
+    "oleksandriya"               : "oleksandriia",
 }
 
-os.makedirs(LOGOS_DIR, exist_ok=True)
+
+def norm_alias(s: str) -> str:
+    n = norm(s)
+    return TEAM_ALIASES.get(n, n)
 
 
-# ── 1. CSV'lerden takım verisi topla ─────────────────────────────────────────
-def load_teams_from_csvs() -> dict[str, dict]:
-    """
-    Her iki CSV'yi okuyarak takım sözlüğü döndürür.
-    Yapı: { "team_id_str": {"id": int, "name": str, "logo": str} }
-    """
-    teams: dict[str, dict] = {}
-
-    # --- future_matches_rows.csv ---
-    if os.path.exists(FUTURE_CSV):
-        with open(FUTURE_CSV, encoding="utf-8") as f:
-            for row in csv.DictReader(f):
-                try:
-                    data = json.loads(row["data"])
-                    for side in ("home", "away"):
-                        t = data["teams"][side]
-                        tid = str(t["id"])
-                        teams[tid] = {
-                            "id":   t["id"],
-                            "name": t["name"],
-                            "logo": t.get("logo", ""),
-                        }
-                except Exception:
-                    pass
-        print(f"[CSV]  future_matches → {len(teams)} takım")
-    else:
-        print(f"[UYARI] {FUTURE_CSV} bulunamadı, atlanıyor.")
-
-    # --- live_matches_rows.csv ---
-    live_count = 0
-    if os.path.exists(LIVE_CSV):
-        with open(LIVE_CSV, encoding="utf-8") as f:
-            for row in csv.DictReader(f):
-                for id_col, name_col, logo_col in (
-                    ("home_team_id", "home_team", "home_logo"),
-                    ("away_team_id", "away_team", "away_logo"),
-                ):
-                    tid = row.get(id_col, "").strip()
-                    if not tid:
-                        continue
-                    logo = row.get(logo_col, "").strip()
-                    name = row.get(name_col, "").strip()
-
-                    # Mackolik logosu varsa future verisinin üstüne yaz
-                    if tid not in teams or "im.mackolik.com" in logo:
-                        teams[tid] = {"id": int(tid), "name": name, "logo": logo}
-                        live_count += 1
-
-        print(f"[CSV]  live_matches   → {live_count} takım eklendi/güncellendi")
-    else:
-        print(f"[UYARI] {LIVE_CSV} bulunamadı, atlanıyor.")
-
-    print(f"[CSV]  Toplam benzersiz takım: {len(teams)}")
-    return teams
-
-
-# ── 2. Var olan teams.json ile birleştir ─────────────────────────────────────
-def merge_with_existing(new_teams: dict[str, dict]) -> dict[str, dict]:
-    """Varsa mevcut teams.json'u yükler, yeni verilerle birleştirir."""
-    if not os.path.exists(TEAMS_JSON):
-        return new_teams
-
-    with open(TEAMS_JSON, encoding="utf-8") as f:
-        existing = json.load(f)
-
-    before = len(existing)
-    for tid, v in new_teams.items():
-        # Mackolik logolu yeni veri her zaman kazanır
-        if tid not in existing or "im.mackolik.com" in v.get("logo", ""):
-            existing[tid] = v
-
-    print(f"[JSON] Mevcut: {before} → Birleştirilmiş: {len(existing)} takım")
-    return existing
-
-
-# ── 3. Mackolik logolarını indir ─────────────────────────────────────────────
-def _mackolik_id_from_url(logo_url: str) -> str | None:
-    """Logo URL'sinden mackolik takım ID'sini çıkarır."""
-    m = re.search(r"/buyuk/(\d+)\.gif", logo_url)
-    return m.group(1) if m else None
-
-
-def download_logos(teams: dict[str, dict]) -> dict[str, dict]:
-    """
-    im.mackolik.com'lu logo URL'si olan takımların .gif dosyasını indirir.
-    Logo indirildikten sonra 'logo_local' alanına yerel path kaydedilir.
-    """
-    session = requests.Session()
-    session.headers.update(HEADERS)
-
-    mackolik_teams = {
-        tid: v for tid, v in teams.items()
-        if "im.mackolik.com" in v.get("logo", "")
-    }
-
-    print(f"\n[İNDİR] {len(mackolik_teams)} takım için Mackolik logosu indiriliyor…")
-    ok = skip = fail = 0
-
-    for tid, team in sorted(mackolik_teams.items(), key=lambda x: int(x[0])):
-        mac_id    = _mackolik_id_from_url(team["logo"]) or tid
-        logo_url  = MACKOLIK_LOGO.format(id=mac_id)
-        local_path = os.path.join(LOGOS_DIR, f"{mac_id}.gif")
-        rel_path   = f"data/logos/{mac_id}.gif"   # proje köküne göre relative
-
-        # Zaten varsa atla
-        if os.path.exists(local_path) and os.path.getsize(local_path) > 100:
-            teams[tid]["logo_local"] = rel_path
-            skip += 1
+def token_sim(a: str, b: str) -> float:
+    ta = {t for t in norm(a).split() if len(t) > 1}
+    tb = {t for t in norm(b).split() if len(t) > 1}
+    if not ta or not tb:
+        return 0.0
+    hit = 0.0
+    for t in ta:
+        if t in tb:
+            hit += 1
             continue
-
-        try:
-            r = session.get(logo_url, timeout=REQUEST_TIMEOUT)
-            if r.status_code == 200 and len(r.content) > 100:
-                with open(local_path, "wb") as f:
-                    f.write(r.content)
-                teams[tid]["logo_local"] = rel_path
-                print(f"  ✓ {mac_id:>8}  {team['name']}")
-                ok += 1
-            else:
-                print(f"  ✗ {mac_id:>8}  {team['name']}  [{r.status_code}]")
-                fail += 1
-        except Exception as e:
-            print(f"  ! {mac_id:>8}  {team['name']}  HATA: {e}")
-            fail += 1
-
-        time.sleep(REQUEST_DELAY)
-
-    print(f"\n[İNDİR] Tamamlandı → ✓ {ok} yeni  ⏭ {skip} zaten var  ✗ {fail} başarısız")
-    return teams
+        for u in tb:
+            if t.startswith(u) or u.startswith(t):
+                hit += 0.7
+                break
+    return hit / max(len(ta), len(tb))
 
 
-# ── 4. Yeni JSON dosyasına yaz ───────────────────────────────────────────────
-def save_teams_json(teams: dict[str, dict]) -> None:
-    """Takım sözlüğünü data/teams_new.json'a yazar."""
-    with open(TEAMS_OUT_JSON, "w", encoding="utf-8") as f:
-        json.dump(teams, f, ensure_ascii=False, indent=2)
-    print(f"\n[JSON] {len(teams)} takım → {TEAMS_OUT_JSON}")
+def find_logo(
+    team_id:     int | None,
+    team_name:   str,
+    by_id:       dict[int, dict],
+    by_norm:     dict[str, dict],
+) -> str | None:
+    """
+    Takım için api_logo URL'sini döndürür.
+    Önce ID, bulunamazsa fuzzy isim eşleştirmesi.
+    """
+    # 1. ID
+    if team_id and team_id in by_id:
+        return by_id[team_id].get("api_logo") or None
+
+    # 2. Exact norm
+    na = norm_alias(team_name)
+    if na in by_norm:
+        return by_norm[na].get("api_logo") or None
+
+    # 3. Fuzzy
+    best_score = 0.0
+    best_logo  = None
+    for jnorm, jentry in by_norm.items():
+        s = token_sim(na, jnorm)
+        if s > best_score:
+            best_score = s
+            best_logo  = jentry.get("api_logo")
+
+    if best_score >= THRESHOLD and best_logo:
+        return best_logo
+
+    return None
 
 
-# ── 5. Ana akış ──────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════
+# ANA AKIŞ
+# ═══════════════════════════════════════════════════════════════════════
+
 def main() -> None:
     print("=" * 60)
-    print("  H2Hscrape – Teams JSON & Logo Builder")
+    print("  H2Hscrape – Live Matches Logo Updater")
     print("=" * 60, "\n")
 
-    teams   = load_teams_from_csvs()
-    teams   = merge_with_existing(teams)
-    teams   = download_logos(teams)
-    save_teams_json(teams)
+    # ── 1. teams_updated.json yükle ─────────────────────────────────
+    if not os.path.exists(TEAMS_JSON):
+        print(f"[HATA] {TEAMS_JSON} bulunamadı!")
+        sys.exit(1)
 
-    # Özet
-    mac_logos   = sum(1 for v in teams.values() if "im.mackolik.com" in v.get("logo",""))
-    local_logos = sum(1 for v in teams.values() if v.get("logo_local"))
-    api_logos   = sum(1 for v in teams.values() if "api-sports.io" in v.get("logo",""))
+    with open(TEAMS_JSON, encoding="utf-8") as f:
+        raw = json.load(f)
+
+    by_id   = {t["id"]: t for t in raw if "id" in t}
+    by_norm = {norm(t["name"]): t for t in raw}
+    print(f"[JSON] {len(by_id)} takım yüklendi")
+
+    # ── 2. Supabase'den live_matches çek ────────────────────────────
+    print("[DB] live_matches çekiliyor...")
+    resp = sb.table("live_matches") \
+             .select("fixture_id, home_team_id, away_team_id, home_team, away_team") \
+             .execute()
+
+    rows = resp.data or []
+    if not rows:
+        print("[DB] live_matches tablosu boş.")
+        return
+    print(f"[DB] {len(rows)} satır alındı")
+
+    # ── 3. Her satır için logo bul ve güncelle ──────────────────────
+    updates   = []
+    no_home   = []
+    no_away   = []
+
+    for row in rows:
+        fixture_id = row["fixture_id"]
+        home_id    = row.get("home_team_id")
+        away_id    = row.get("away_team_id")
+        home_name  = row.get("home_team", "")
+        away_name  = row.get("away_team", "")
+
+        home_logo = find_logo(home_id, home_name, by_id, by_norm)
+        away_logo = find_logo(away_id, away_name, by_id, by_norm)
+
+        if home_logo and away_logo:
+            updates.append({
+                "fixture_id": fixture_id,
+                "home_logo":  home_logo,
+                "away_logo":  away_logo,
+            })
+            print(f"  ✓ [{fixture_id}] {home_name} vs {away_name}")
+        else:
+            if not home_logo:
+                no_home.append((fixture_id, home_name))
+                print(f"  ~ [{fixture_id}] home logo YOK: '{home_name}'")
+            if not away_logo:
+                no_away.append((fixture_id, away_name))
+                print(f"  ~ [{fixture_id}] away logo YOK: '{away_name}'")
+
+            # Kısmen de olsa yaz
+            patch: dict = {"fixture_id": fixture_id}
+            if home_logo: patch["home_logo"] = home_logo
+            if away_logo: patch["away_logo"] = away_logo
+            if len(patch) > 1:
+                updates.append(patch)
+
+    # ── 4. Supabase'e toplu upsert ───────────────────────────────────
+    if not updates:
+        print("\n[DB] Yazılacak güncelleme yok.")
+        return
+
+    print(f"\n[DB] {len(updates)} satır güncelleniyor...")
+    BATCH = 100
+    total_written = 0
+    for i in range(0, len(updates), BATCH):
+        batch = updates[i : i + BATCH]
+        err_resp = sb.table("live_matches") \
+                     .upsert(batch, on_conflict="fixture_id") \
+                     .execute()
+        total_written += len(batch)
+        print(f"  [{i+len(batch)}/{len(updates)}] yazıldı")
+
+    print(f"\n[DB] ✅ {total_written} satır güncellendi")
+
+    # ── 5. Özet ─────────────────────────────────────────────────────
     print(f"\n{'─'*60}")
-    print(f"  Toplam takım     : {len(teams)}")
-    print(f"  Mackolik logolu  : {mac_logos}  (local: {local_logos})")
-    print(f"  API-Sports logolu: {api_logos}")
-    print(f"  Logolar klasörü  : {LOGOS_DIR}")
-    print(f"  Çıktı JSON       : {TEAMS_OUT_JSON}")
+    print(f"  Toplam satır      : {len(rows)}")
+    print(f"  Güncellenen       : {total_written}")
+    print(f"  Home logo YOK     : {len(no_home)}")
+    print(f"  Away logo YOK     : {len(no_away)}")
+
+    if no_home or no_away:
+        print("\n  Logosu bulunamayan takımlar:")
+        for fid, name in no_home:
+            print(f"    home [{fid}] '{name}'")
+        for fid, name in no_away:
+            print(f"    away [{fid}] '{name}'")
 
 
 if __name__ == "__main__":
