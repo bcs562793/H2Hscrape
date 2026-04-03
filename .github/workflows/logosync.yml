@@ -2,7 +2,8 @@ name: Team Logo Sync
 
 on:
   workflow_dispatch:
-  
+  schedule:
+    - cron: '0 * * * *' # Her saat başında (00:00, 01:00, ...) otomatik çalışır
   
 jobs:
   sync:
