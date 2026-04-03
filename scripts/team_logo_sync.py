@@ -33,8 +33,9 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 sb = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ── teams_updated.json yolu ──────────────────────────────────────────
-BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-TEAMS_JSON = os.path.join(BASE_DIR, "data", "teams_updated.json")
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)  # scripts klasöründen bir üst dizine (ana dizine) çık
+TEAMS_JSON   = os.path.join(PROJECT_ROOT, "data", "teams_updated.json")
 
 # ── Eşik değerleri (odds-update.js v6 ile aynı) ─────────────────────
 THRESHOLD    = 0.40
